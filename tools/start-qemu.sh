@@ -19,7 +19,7 @@ V6_PREFIX=${V6_PREFIX:-128}
 
 HOST=${HOST:-q}
 
-MOD_PATH=${MOD_PATH:-}
+START_DIR=${START_DIR:-}
 # }}}
 
 # Internal variables:
@@ -97,15 +97,6 @@ host() {
 	fs+=" -device virtio-9p-pci,fsdev=vfs2,mount_tag=/dev/kernel"
 	# fs+=" -device virtio-9p-pci,fsdev=vfs3,mount_tag=$DIR_EXPORT"
 	fs+=" -device virtio-9p-pci,fsdev=vfs4,mount_tag=/tmp/dir_q"
-
-        # If not specified, don't mount, as it can cause issues with some filesystems (e.g. cgroupfs) 
-        # and also just generally not needed for most use cases.
-        #
-        # This is use for me to test custom kernel modules without having to install them into the kernel source tree
-	if [[ -n "$MOD_PATH" && -d "$MOD_PATH" ]]; then
-		fs+=" -fsdev local,id=vfs5,path=$MOD_PATH,security_model=none"
-		fs+=" -device virtio-9p-pci,fsdev=vfs5,mount_tag=/dev/mods"
-	fi
 
 	local console
 	console+=" -display none"
@@ -232,7 +223,7 @@ host() {
 	init+="NET_TAP='$NET_TAP' "
 	init+="NET_VHOST='$NET_VHOST' "
 	init+="SCRIPT='$SCRIPT' "
-	init+="MOD_PATH='$MOD_PATH' "
+	init+="START_DIR='$START_DIR' "
 	init+="$ENVIRON_ARG "
 	init+=" $SELF "
 
@@ -380,12 +371,6 @@ guest() {
 		fi
 	else
 		say "$DIR_KERNEL mount point doesn't exist, not mounting"
-	fi
-
-	if [[ -n "$MOD_PATH" ]]; then
-		say mounting custom modules at /mnt/mods
-		mkdir -p /mnt/mods
-		mount -n -t 9p -o trans=virtio /dev/mods /mnt/mods
 	fi
 
 	say networking as $HOSTNAME
@@ -557,7 +542,6 @@ export HISTSIZE=1000
 export HISTCONTROL=ignoredups
 export _ZO_DATA_DIR=/tmp
 export DIR_KERNEL="$DIR_KERNEL"
-export MOD_PATH="/mnt/mods"
 
 # Enable readline/emacs mode for Ctrl-R history search
 set -o emacs
@@ -593,12 +577,7 @@ EOF
 		source "$DIR_KERNEL/tools/bpf/bpftool/bash-completion/bpftool"
 	fi
 
-	local START_DIR="/mnt/mods"
-	if [[ -n "$MOD_PATH" && -d "$START_DIR" ]]; then
-		cd "$START_DIR"
-	elif [[ -d "$DIR_KERNEL" ]]; then
-		cd "$DIR_KERNEL"
-	fi
+	cd "${START_DIR:-$DIR_KERNEL}"
 
 	if [[ -n "$SCRIPT" ]]; then
 		say non-interactive bash script
