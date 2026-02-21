@@ -7,6 +7,8 @@ KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stab
 KERNEL_DIR ?= linux-$(KERNEL_VERSION)
 
 BUILD ?= ./tools/build.sh
+RUN ?= ./tools/start-qemu.sh
+KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
 
 # sudo apt install clang lld llvm
 ifeq ($(shell which apt 2>/dev/null), /usr/bin/apt)
@@ -43,6 +45,10 @@ clone:
 build:
 	@echo "Building the kernel..."	
 	$(BUILD) -d $(KERNEL_DIR) -S
+
+run:
+	@echo "Running the kernel in QEMU..."	
+	$(RUN) -m $(KERNEL_IMAGE)
 
 .PHONY: clean
 clean:
