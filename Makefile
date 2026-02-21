@@ -6,6 +6,8 @@ KERNEL_VERSION ?= 6.18.6
 KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 KERNEL_DIR ?= linux-$(KERNEL_VERSION)
 
+BUILD ?= ./tools/build.sh
+
 # sudo apt install clang lld llvm
 ifeq ($(shell which apt 2>/dev/null), /usr/bin/apt)
 	INSTALL_CMD = sudo apt update && sudo apt install -y
@@ -40,7 +42,7 @@ clone:
 .PHONY: build
 build:
 	@echo "Building the kernel..."	
-	./build.sh -d $(KERNEL_DIR) -S
+	$(BUILD) -d $(KERNEL_DIR) -S
 
 .PHONY: clean
 clean:
