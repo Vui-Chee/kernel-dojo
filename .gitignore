@@ -1,0 +1,14 @@
+.env
+*.gz
+*mfs/
+
+# all cloned kernel repos will be prefixed with
+linux-*/
+
+*/**/*.o
+*/**/*.ko
+*/**/*.cmd
+*/**/*.mod
+*/**/*.mod.*
+*/**/modules.order
+*/**/Module*
