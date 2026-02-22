@@ -7,7 +7,7 @@ KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stab
 KERNEL_DIR ?= linux-$(KERNEL_VERSION)
 
 BUILD ?= ./tools/build.sh
-RUN ?= ./tools/start-qemu.sh
+RUN ?= ./tools/start_qemu.sh
 KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
 
 # sudo apt install clang lld llvm
@@ -61,3 +61,7 @@ scope:
 	make -C $(KERNEL_DIR) cscope
 	@echo "Starting cscope..."	
 	cd $(KERNEL_DIR)  && cscope -d
+
+# TODO: init module boilerplate command
+#
+# TODO: make patch command? send email???
