@@ -4,11 +4,16 @@
 #       https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net.git linux-netdev
 KERNEL_VERSION ?= 6.18.6
 KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-KERNEL_DIR ?= linux-$(KERNEL_VERSION)
+
+# Relative path to the kernel source directory. The build script will look for the kernel source here.
+KERNEL_DIR ?= $(realpath linux-$(KERNEL_VERSION))
 
 BUILD ?= ./tools/build.sh
 RUN ?= ./tools/start_qemu.sh
 KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
+MODULES_DIR ?= examples
+
+SDIRS=$(wildcard *)
 
 # sudo apt install clang lld llvm
 ifeq ($(shell which apt 2>/dev/null), /usr/bin/apt)
@@ -27,6 +32,9 @@ else
 	$(error "No supported package manager found (apt, dnf, pacman, zypper). Please install dependencies manually.")
 endif
 
+echo:
+	@echo $(KERNEL_DIR)
+
 .PHONY: install
 install:
 	@echo "Detected package manager. Installing dependencies..."
@@ -41,10 +49,10 @@ clone:
 		git clone --depth 1 --branch v$(KERNEL_VERSION) $(KERNEL_REMOTE) $(KERNEL_DIR); \
 	fi
 
-.PHONY: build
-build:
-	@echo "Building the kernel..."	
-	$(BUILD) -d $(KERNEL_DIR) -S
+# .PHONY: build
+# build:
+# 	@echo "Building the kernel..."	
+# 	$(BUILD) -d $(KERNEL_DIR) -S
 
 run:
 	@echo "Running the kernel in QEMU..."	
@@ -60,8 +68,31 @@ scope:
 	@echo "Generating cscope database..."	
 	make -C $(KERNEL_DIR) cscope
 	@echo "Starting cscope..."	
-	cd $(KERNEL_DIR)  && cscope -d
+	cd $(KERNEL_DIR) && cscope -d
 
-# TODO: init module boilerplate command
-#
-# TODO: make patch command? send email???
+.PHONY: imod
+imod:
+	mkdir -p $(MODULES_DIR)/$(name)
+	cp -r $(MODULES_DIR)/bare-module/* $(MODULES_DIR)/$(name)/
+
+export KROOT
+
+.PHONY: mod
+mod:
+	@cd examples; \
+	@for dirs in $(SDIRS); do \
+	   cd $$dirs > /dev/null && echo ' ' \
+	&& echo DOING $$dirs ..........>&2  && \
+	 #   if [ -f nomake.sh ] ; then \
+		# ./nomake.sh ; \
+	 #   else \
+		# ../../tools/genmake ; \
+		# if [ -f Makefile ] ; then $(MAKE) -j 4 ; fi ; \
+	 #   fi ; \
+	cd .. ; \
+	done
+
+.PHONY: clean
+cmod:
+	@cd $(MODULES_DIR)/$(name) 
+	$(MAKE) -C $(KERNEL_DIR) M=$(shell PWD) clean
