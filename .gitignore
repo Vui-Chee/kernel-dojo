@@ -13,4 +13,4 @@ linux-*/
 */**/modules.order
 */**/Module*
 
-examples/**/Makefile
+modules/**/Makefile
