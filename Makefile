@@ -8,6 +8,7 @@ KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stab
 # Relative path to the kernel source directory. The build script will look for the kernel source here.
 KERNEL_DIR ?= $(realpath linux-$(KERNEL_VERSION))
 
+MAKEFLAGS += KCFLAGS="-Wno-error=missing-prototypes" LLVM=1 C=2 -j$(nproc)
 BUILD ?= ./tools/build.sh
 RUN ?= ./tools/start_qemu.sh
 KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
@@ -78,6 +79,13 @@ mod:
 		echo "Building $$dir..."; \
 		cd $$dir && \
 			KROOT=$(KERNEL_DIR) ../../tools/genmake.sh && \
-			if [ -f Makefile ]; then $(MAKE) KCFLAGS="-Wno-error=missing-prototypes" LLVM=1 C=2 -j4; fi; \
+			if [ -f Makefile ]; then $(MAKE); fi; \
 		cd $(CURDIR); \
+	done
+
+.PHONY: cmod
+cmod:
+	@for dirs in $(M_DIR); 	do \
+	if [ -f $$dirs/Makefile ] ; then \
+		$(MAKE) -C $$dirs clean ; fi ;\
 	done
