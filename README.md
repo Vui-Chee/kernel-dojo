@@ -55,19 +55,10 @@ NRCPU=4 MEMORY=8192 make run
 
 ## Writing kernel modules
 
-### Create a new module
-
-```sh
-make imod name=my_module
-```
-
-This copies the `bare-module` template into `examples/my_module/`.
-
 ### Build a module
 
 ```sh
-cd examples/my_module
-make -C ../../linux-6.18.6 M=$(pwd) modules
+make mod -E M_DIR=examples/process-times/
 ```
 
 ### Example modules
@@ -102,5 +93,4 @@ kernel-dojo/
 | `make clone` | Clone the kernel source |
 | `make run` | Boot the kernel in QEMU |
 | `make scope` | Build and open a cscope index of the kernel |
-| `make imod name=<n>` | Scaffold a new module named `<n>` |
 | `make clean` | Clean the kernel build |
