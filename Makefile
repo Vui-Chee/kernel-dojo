@@ -13,6 +13,11 @@ RUN ?= ./tools/start_qemu.sh
 KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
 
 M_DIR ?= modules/*
+M_DIR := $(realpath $(M_DIR))
+
+# Apply lint/fmt only to these files.
+SRCS  := $(wildcard $(M_DIR)/*.c $(M_DIR)/*.h)
+FILTERED_SRCS := $(filter-out %.mod.c, $(SRCS))
 
 export KROOT
 
@@ -88,3 +93,11 @@ cmod:
 	if [ -f $$dirs/Makefile ] ; then \
 		$(MAKE) -C $$dirs clean ; fi ;\
 	done
+
+.PHONY: fmt
+fmt:
+	VERSION_CONTROL=none $(KERNEL_DIR)/scripts/Lindent $(FILTERED_SRCS)
+
+.PHONY: lint
+lint:
+	$(KERNEL_DIR)/scripts/checkpatch.pl --file --no-tree $(FILTERED_SRCS)
