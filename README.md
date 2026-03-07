@@ -58,7 +58,7 @@ NRCPU=4 MEMORY=8192 make run
 ### Build a module
 
 ```sh
-make mod -E M_DIR=examples/process-times/
+make mod -E M_DIR=modules/process-times/
 ```
 
 ### Example modules
@@ -72,7 +72,7 @@ make mod -E M_DIR=examples/process-times/
 
 ```
 kernel-dojo/
-├── examples/           # Kernel modules
+├── modules/           # Kernel modules
 │   ├── bare-module/    # Template module
 │   └── process-times/  # Example: process CPU time tracking
 ├── tools/

@@ -13,7 +13,7 @@ BUILD ?= ./tools/build.sh
 RUN ?= ./tools/start_qemu.sh
 KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
 
-M_DIR ?= examples
+M_DIR ?= modules/*
 
 export KROOT
 
