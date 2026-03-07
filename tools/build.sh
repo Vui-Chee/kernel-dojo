@@ -213,8 +213,9 @@ if [[ ! -e $KDIR/.config ]]; then
 	fi
 
 	set -x
-	make $SILENT -j$(nproc) CC="$CC" LLVM=$LLVM ARCH=$ARCH olddefconfig
 fi
+
+make $SILENT -j$(nproc) CC="$CC" LLVM=$LLVM ARCH=$ARCH olddefconfig
 
 KCFLAGS="-Wno-error=format -Wno-error=array-bounds" \
 make $SILENT -j$(nproc) CC="$CC" LLVM=$LLVM ARCH=$ARCH $TARGETS
