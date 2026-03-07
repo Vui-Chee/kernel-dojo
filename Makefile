@@ -4,10 +4,9 @@
 #       https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net.git linux-netdev
 KERNEL_VERSION ?= 6.18.6
 KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-
-# Relative path to the kernel source directory. The build script will look for the kernel source here.
 KERNEL_DIR ?= $(realpath linux-$(KERNEL_VERSION))
 
+# LLVM follows how kernel is built using build.sh
 MAKEFLAGS += KCFLAGS="-Wno-error=missing-prototypes" LLVM=1 C=2 -j$(nproc)
 BUILD ?= ./tools/build.sh
 RUN ?= ./tools/start_qemu.sh
