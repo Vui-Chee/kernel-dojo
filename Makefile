@@ -11,9 +11,10 @@ KERNEL_DIR ?= $(realpath linux-$(KERNEL_VERSION))
 BUILD ?= ./tools/build.sh
 RUN ?= ./tools/start_qemu.sh
 KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
-MODULES_DIR ?= examples
 
-SDIRS=$(wildcard *)
+M_DIR ?= examples
+
+export KROOT
 
 # sudo apt install clang lld llvm
 ifeq ($(shell which apt 2>/dev/null), /usr/bin/apt)
@@ -49,50 +50,34 @@ clone:
 		git clone --depth 1 --branch v$(KERNEL_VERSION) $(KERNEL_REMOTE) $(KERNEL_DIR); \
 	fi
 
-# .PHONY: build
-# build:
-# 	@echo "Building the kernel..."	
-# 	$(BUILD) -d $(KERNEL_DIR) -S
+.PHONY: build
+build:
+	@echo "Building the kernel..."
+	$(BUILD) -d $(KERNEL_DIR) -S
 
 run:
-	@echo "Running the kernel in QEMU..."	
+	@echo "Running the kernel in QEMU..."
 	$(RUN) -m $(KERNEL_IMAGE)
 
 .PHONY: clean
 clean:
-	@echo "Cleaning the kernel build..."	
-	cd $(KERNEL_DIR) && make clean
+	@echo "Cleaning the kernel build..."
+	cd $(KERNEL_DIR) && $(MAKE) clean
 
 .PHONY: scope
 scope:
-	@echo "Generating cscope database..."	
-	make -C $(KERNEL_DIR) cscope
-	@echo "Starting cscope..."	
+	@echo "Generating cscope database..."
+	$(MAKE) -C $(KERNEL_DIR) cscope
+	@echo "Starting cscope..."
 	cd $(KERNEL_DIR) && cscope -d
-
-.PHONY: imod
-imod:
-	mkdir -p $(MODULES_DIR)/$(name)
-	cp -r $(MODULES_DIR)/bare-module/* $(MODULES_DIR)/$(name)/
-
-export KROOT
 
 .PHONY: mod
 mod:
-	@cd examples; \
-	@for dirs in $(SDIRS); do \
-	   cd $$dirs > /dev/null && echo ' ' \
-	&& echo DOING $$dirs ..........>&2  && \
-	 #   if [ -f nomake.sh ] ; then \
-		# ./nomake.sh ; \
-	 #   else \
-		# ../../tools/genmake ; \
-		# if [ -f Makefile ] ; then $(MAKE) -j 4 ; fi ; \
-	 #   fi ; \
-	cd .. ; \
+	@for dir in $(M_DIR); do \
+		[ -d $$dir ] || continue; \
+		echo "Building $$dir..."; \
+		cd $$dir && \
+			KROOT=$(KERNEL_DIR) ../../tools/genmake.sh && \
+			if [ -f Makefile ]; then $(MAKE) KCFLAGS="-Wno-error=missing-prototypes" LLVM=1 C=2 -j4; fi; \
+		cd $(CURDIR); \
 	done
-
-.PHONY: clean
-cmod:
-	@cd $(MODULES_DIR)/$(name) 
-	$(MAKE) -C $(KERNEL_DIR) M=$(shell PWD) clean

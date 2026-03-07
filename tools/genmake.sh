@@ -47,7 +47,7 @@ for names in *.c ; do
 if [[ $(grep NOMAKE $names) ]] || [[ $(grep vermagic $names) ]] || [[ $names == *.mod.c ]] ; then
     echo "$names is being skipped, it is not a module or program"
     else
-    if [[ $(grep \<linux\/module.h\> $names ) ]] ; then
+    if [[ $(grep '<linux/' $names) ]] ; then
         FILENAME_DOTO=$(basename $names .c).o
         OBJS=$OBJS" $FILENAME_DOTO"
         K_S=$K_S" $names"
@@ -85,7 +85,14 @@ echo "### Copyright, Jerry Cooperstein, coop@linuxfoundation.org 2003-2023 ####"
 echo "### License: GPLv2 ###"                                              >>Makefile
 
 if [[ -n $K_S ]] ; then
-    echo -e "\nobj-m += $OBJS" >> Makefile
+    KOBJ_COUNT=$(echo $OBJS | wc -w)
+    if [[ $KOBJ_COUNT -gt 1 ]] ; then
+        MOD_NAME=$(basename "$(pwd)" | tr '-' '_')
+        echo -e "\nobj-m +=  ${MOD_NAME}.o" >> Makefile
+        echo -e "\n${MOD_NAME}-y :=$OBJS\n" >> Makefile
+    else
+        echo -e "\nobj-m += $OBJS" >> Makefile
+    fi
     echo -e "\nexport KROOT=$KROOT" >> Makefile
     if [[ -n $ARCH ]] ; then
 	echo -e "\nexport ARCH=$ARCH" >> Makefile
