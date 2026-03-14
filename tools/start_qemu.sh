@@ -224,6 +224,8 @@ host() {
 	init+="NET_VHOST='$NET_VHOST' "
 	init+="SCRIPT='$SCRIPT' "
 	init+="START_DIR='$START_DIR' "
+	init+="TERM_ROWS='$(tput lines 2>/dev/null || echo 24)' "
+	init+="TERM_COLS='$(tput cols 2>/dev/null || echo 80)' "
 	init+="$ENVIRON_ARG "
 	init+=" $SELF "
 
@@ -568,8 +570,8 @@ fi
 if [[ -n "\$(command -v resize)" ]]; then
 	eval \$(resize)
 else
-	stty rows 24 cols 80
-	export LINES=24 COLUMNS=80
+	stty rows ${TERM_ROWS:-24} cols ${TERM_COLS:-80}
+	export LINES=${TERM_ROWS:-24} COLUMNS=${TERM_COLS:-80}
 fi
 EOF
 
