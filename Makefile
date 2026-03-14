@@ -62,7 +62,7 @@ build:
 
 run:
 	@echo "Running the kernel in QEMU..."
-	$(RUN) -m $(KERNEL_IMAGE)
+	START_DIR=$(realpath $(M_DIR)) $(RUN) -m $(KERNEL_IMAGE)
 
 .PHONY: clean
 clean:
