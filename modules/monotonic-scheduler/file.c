@@ -4,16 +4,11 @@
 #include <linux/kernel.h>
 #include <linux/fs.h>
 #include <linux/uaccess.h>
-#include <linux/slab.h>
 #include <linux/cleanup.h>
-#include <linux/list.h>
-#include <linux/mutex.h>
 #include <linux/err.h>
 #include <linux/mm.h>
-#include <linux/jiffies.h>
 
 #include "file.h"
-// #include "process.h"
 
 const struct proc_ops my_fops = {
 	.proc_read = on_proc_read,
@@ -30,8 +25,10 @@ ssize_t on_proc_read(struct file *file, char __user *ubuf, size_t count,
 ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 		      size_t count, loff_t *ppos)
 {
-	// Prevent user from flooding kernel with large writes.
-	if (count > PAGE_SIZE)
+	if (*ppos != 0)
+		return -EINVAL;
+
+	if (count < 1 || count > PAGE_SIZE)
 		return -EINVAL;
 
 	// Copy data from user space to kernel space safely (including null-termination).
@@ -39,16 +36,46 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 	if (IS_ERR(kbuf))
 		return PTR_ERR(kbuf);
 
-	pr_debug("Received from user: %s\n", kbuf);
+	pid_t pid;
+	char op = kbuf[0];
 
-	// int ret;
+	switch (op) {
+	case 'R': {
+		u32 period;
+		u32 processing_time;
+		int ret = sscanf(kbuf, "%c,%d,%u,%u", &op, &pid, &period, &processing_time);
 
-	// TODO: parse kbuf for different commands from user.
-	//
-	// REGISTRATION: R,PID,PERIOD,COMPUTATION
-	// DE-REGISTRATION: D,PID
-	// 
-	// TODO: Do later
-	// YIELD: Y,PID
-	return 0;
+		if (ret != 4) {
+			pr_err("Register operation accepts 4 values. Got %d values.\n", ret);
+			break;
+		}
+		pr_debug("Registering process: %c,%d,%u,%u\n", op, pid, period, processing_time);
+		break;
+	}
+	case 'D': {
+		int ret = sscanf(kbuf, "%c,%d", &op, &pid);
+
+		if (ret != 2) {
+			pr_err("De-register operation accepts 2 values. Got %d values.\n", ret);
+			break;
+		}
+		pr_debug("De-registering process: %c,%d\n", op, pid);
+		break;
+	}
+	case 'Y': {
+		int ret = sscanf(kbuf, "%c,%d", &op, &pid);
+
+		if (ret != 2) {
+			pr_err("Yield operation accepts 2 values. Got %d values.\n", ret);
+			break;
+		}
+		pr_debug("Yield: %c,%d\n", op, pid);
+		break;
+	}
+	default:
+		pr_err("Unknown operation: %c\n", op);
+		return count;
+	}
+
+	return count;
 }

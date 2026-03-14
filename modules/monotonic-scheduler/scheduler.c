@@ -26,7 +26,7 @@ static int __init init_scheduler(void)
 	if (!our_proc_file)
 		return -ENOMEM;
 
-	pr_debug("Module initialized success\n");
+	pr_debug("Module initialized success.\n");
 	return 0;
 }
 
