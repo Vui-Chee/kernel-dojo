@@ -16,7 +16,7 @@ M_DIR ?= modules/*
 M_DIR := $(realpath $(M_DIR))
 
 # Apply lint/fmt only to these files.
-SRCS  := $(wildcard $(M_DIR)/*.c $(M_DIR)/*.h)
+SRCS  := $(sort $(foreach dir,$(M_DIR),$(wildcard $(dir)/*.c $(dir)/*.h)))
 FILTERED_SRCS := $(filter-out %.mod.c, $(SRCS))
 
 export KROOT
