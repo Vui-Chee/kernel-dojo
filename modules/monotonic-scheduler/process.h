@@ -38,6 +38,7 @@ struct task {
 
 // Guards access to the linked list
 static DEFINE_MUTEX(processes_mutex);
+
 // List of processes we track.
 extern struct list_head processes;
 
