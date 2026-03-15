@@ -19,12 +19,18 @@ enum TASK_STATE {
 };
 
 struct task {
+	// Use this as param for scheduling API.
 	struct task_struct *linux_task;
+	// Wakes the dispatcher thread.
 	struct timer_list wakeup_timer;
 
+	// Userspace process pid.
 	pid_t pid;
+	// Timer will periodically trigger the dispatcher thread.
 	u32 period;
+	// Use to calculate admission control.
 	u32 processing_time;
+	// Current state of the registered task.
 	enum TASK_STATE state;
 
 	struct list_head list;
