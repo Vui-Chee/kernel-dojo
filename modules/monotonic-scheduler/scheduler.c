@@ -5,6 +5,7 @@
 #include <linux/proc_fs.h>
 
 #include "file.h"
+#include "process.h"
 
 #define PROC_TIME_DIR "monotonic_sched"
 #define PROCFS_FILE "status"
