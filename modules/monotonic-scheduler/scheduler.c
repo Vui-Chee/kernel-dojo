@@ -27,7 +27,11 @@ static int __init init_scheduler(void)
 	if (!our_proc_file)
 		return -ENOMEM;
 
-	process_init();
+	int errno = process_init();
+	if (errno != 0) {
+		pr_err("Error init process. Errno = %d\n", errno);
+		return errno;
+	}
 
 	pr_debug("Module initialized success.\n");
 	return 0;

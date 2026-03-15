@@ -21,8 +21,23 @@ struct task_struct *find_task_by_pid(int nr)
 	return task;
 };
 
-void process_init(void) {
-	task_cache = KMEM_CACHE(task, SLAB_HWCACHE_ALIGN);
+static void task_ctor(void *obj)
+{
+    struct task *t = obj;
+    INIT_LIST_HEAD(&t->list);
+}
+
+int process_init(void) {
+	task_cache = kmem_cache_create(
+	        "processes_task_cache",   // cache name
+	        sizeof(struct task),      // object size
+	        0,                        // alignment (0 = default)
+	        SLAB_HWCACHE_ALIGN,       // flags
+	        task_ctor                 // constructor
+	);
+	if (!task_cache)
+		return -ENOMEM;
+	return 0;
 }
 
 void process_teardown(void) {
@@ -44,6 +59,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time) {
 
 	tk = kmem_cache_alloc(task_cache, GFP_KERNEL);
 	if (!tk)
+		pr_err("Failed to cache alloc process with pid %d.\n", pid);
 		return;
 
 	struct task_struct *k_tk = find_task_by_pid(pid);

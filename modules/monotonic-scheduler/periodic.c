@@ -1,11 +1,23 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <stdio.h>
+#include <stdlib.h>
 #include <sched.h>
 #include <unistd.h>
 
-void __register(int pid, int period, int p_time) {}
+int __register(int pid, unsigned int period, unsigned int p_time)
+{
+	char string[100];
+	sprintf(string, "echo -n \'R,%d,%u,%u\' > /proc/monotonic_sched/status", pid, period, p_time);
+	printf("%s\n", string);
+	return system(string);
+}
 
-void __deregister(int pid) {}
+int __deregister(int pid) {
+	char string[50];
+	sprintf(string, "echo -n \'D,%d\' > /proc/monotonic_sched/status", pid);
+	printf("%s\n", string);
+	return system(string);
+}
 
 // writes to the proc filesystem, kernel module puts application to sleep
 void __yield(void) {}
@@ -21,9 +33,9 @@ int __job(int n)
 
 int main(void)
 {
-	int p_time = 3000; // ms
-	int period = 100; // ms
 	int pid = getpid();
+	unsigned int p_time = 3000; // ms
+	unsigned int period = 100; // ms
 
 	__register(pid, period, p_time);
 
@@ -31,7 +43,7 @@ int main(void)
 
 	__job(100);
 	printf("sleeping...\n");
-	sleep(10);
+	sleep(30);
 
 	__deregister(pid);
 

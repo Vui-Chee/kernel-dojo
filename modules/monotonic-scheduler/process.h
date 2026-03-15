@@ -6,7 +6,7 @@
 #include <linux/pid.h>
 #include <linux/sched.h>
 
-void process_init(void);
+int process_init(void);
 
 void process_teardown(void);
 
