@@ -62,6 +62,7 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 			break;
 		}
 		pr_debug("De-registering process: %c,%d\n", op, pid);
+		deregister_task(pid);
 		break;
 	}
 	case 'Y': {

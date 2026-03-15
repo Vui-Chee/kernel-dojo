@@ -13,7 +13,7 @@ LIST_HEAD(processes);
 // pid_t is signed int.
 struct task_struct *find_task_by_pid(int nr)
 {
-	struct task_struct *task;
+	struct task_struct *task; // kernel task
 
 	rcu_read_lock();
 	task = pid_task(find_vpid(nr), PIDTYPE_PID);
@@ -28,12 +28,45 @@ void process_init(void) {
 void process_teardown(void) {
 	if (task_cache) {
 		kmem_cache_destroy(task_cache);
-		task_cache = NULL; // Good practice to prevent dangling pointers
+		task_cache = NULL; // prevent dangling pointers
 	}
 }
 
-// TODO:
-// slab allocate struct for new task
-// A timer callback wakes up the dispatcher thread.
 void register_task(pid_t pid, u32 period, u32 processing_time) {
+	struct task *tk;
+
+	tk = kmem_cache_alloc(task_cache, GFP_KERNEL);
+	if (!tk)
+		return;
+
+	struct task_struct *k_tk = find_task_by_pid(pid);
+	if (!k_tk) {
+		pr_err("Cannot find task with pid %d.\n", pid);
+		return;
+	}
+
+	// TODO: setup timer.
+	tk->linux_task = k_tk;
+	tk->pid = pid;
+	tk->period = period;
+	tk->processing_time = processing_time;
+
+	mutex_lock(&processes_mutex);
+	list_add_tail(&tk->list, &processes);
+	mutex_unlock(&processes_mutex);
+}
+
+void deregister_task(pid_t pid) {
+	struct task *t, *tmp;
+
+	mutex_lock(&processes_mutex);
+	list_for_each_entry_safe(t, tmp, &processes, list) {
+		if (t->pid == pid) {
+			// Rewire pointers.
+			list_del(&t->list);
+			kmem_cache_free(task_cache, t);
+			return;
+		}
+	}
+	mutex_unlock(&processes_mutex);
 }
