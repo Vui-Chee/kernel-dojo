@@ -36,6 +36,7 @@ static int __init init_scheduler(void)
 static void __exit exit_scheduler(void)
 {
 	pr_debug("Stopping scheduler. Deregistering all processes.\n");
+	process_teardown();
 
 	remove_proc_entry(PROCFS_FILE, dir);
 	remove_proc_entry(PROC_TIME_DIR, NULL);
