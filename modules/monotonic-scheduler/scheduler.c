@@ -28,6 +28,7 @@ static int __init init_scheduler(void)
 		return -ENOMEM;
 
 	int errno = process_init();
+
 	if (errno != 0) {
 		pr_err("Error init process. Errno = %d\n", errno);
 		return errno;

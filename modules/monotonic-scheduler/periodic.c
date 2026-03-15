@@ -7,13 +7,16 @@
 int __register(int pid, unsigned int period, unsigned int p_time)
 {
 	char string[100];
+
 	sprintf(string, "echo -n \'R,%d,%u,%u\' > /proc/monotonic_sched/status", pid, period, p_time);
 	printf("%s\n", string);
 	return system(string);
 }
 
-int __deregister(int pid) {
+int __deregister(int pid)
+{
 	char string[50];
+
 	sprintf(string, "echo -n \'D,%d\' > /proc/monotonic_sched/status", pid);
 	printf("%s\n", string);
 	return system(string);
