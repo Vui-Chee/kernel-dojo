@@ -9,7 +9,6 @@
 LIST_HEAD(processes);
 
 // pid_t is signed int.
-// find_vpid takes in (int) as arg.
 struct task_struct* find_task_by_pid(int nr)
 {
     struct task_struct* task;
