@@ -26,6 +26,13 @@ void process_init(void) {
 }
 
 void process_teardown(void) {
+	struct task *t, *tmp;
+	
+	list_for_each_entry_safe(t, tmp, &processes, list) {
+		list_del_init(&t->list);
+		kmem_cache_free(task_cache, t);
+	}
+
 	if (task_cache) {
 		kmem_cache_destroy(task_cache);
 		task_cache = NULL; // prevent dangling pointers
@@ -53,6 +60,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time) {
 
 	mutex_lock(&processes_mutex);
 	list_add_tail(&tk->list, &processes);
+	pr_debug("Add item to list, count = %ld\n", list_count_nodes(&processes));
 	mutex_unlock(&processes_mutex);
 }
 
@@ -65,8 +73,11 @@ void deregister_task(pid_t pid) {
 			// Rewire pointers.
 			list_del(&t->list);
 			kmem_cache_free(task_cache, t);
-			return;
+			pr_debug("Removed item to list, count = %ld\n", list_count_nodes(&processes));
+			goto done;
 		}
 	}
+
+done:
 	mutex_unlock(&processes_mutex);
 }
