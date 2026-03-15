@@ -6,21 +6,24 @@
 #include <linux/pid.h>
 #include <linux/sched.h>
 
-void process_list_init(void);
-
-void clear_process_list(void);
+void register_task(pid_t pid, u32 period, u32 processing_time);
 
 struct task_struct *find_task_by_pid(int nr);
 
+enum TASK_STATE {
+	RUNNING,
+	READY,
+	SLEEPING // register task first with this state
+};
+
 struct task {
 	struct task_struct *linux_task;
-
-	// TODO: waker for task
-	// struct timer_list wakeup_timer;
+	struct timer_list wakeup_timer;
 
 	pid_t pid;
 	u32 period;
 	u32 processing_time;
+	enum TASK_STATE state;
 
 	struct list_head list;
 };

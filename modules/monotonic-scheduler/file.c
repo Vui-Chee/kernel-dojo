@@ -9,6 +9,7 @@
 #include <linux/mm.h>
 
 #include "file.h"
+#include "process.h"
 
 const struct proc_ops my_fops = {
 	.proc_read = on_proc_read,
@@ -50,6 +51,7 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 			break;
 		}
 		pr_debug("Registering process: %c,%d,%u,%u\n", op, pid, period, processing_time);
+		register_task(pid, period, processing_time);
 		break;
 	}
 	case 'D': {

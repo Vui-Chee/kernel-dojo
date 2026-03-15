@@ -18,3 +18,9 @@ struct task_struct *find_task_by_pid(int nr)
 	rcu_read_unlock();
 	return task;
 };
+
+// TODO: impl register func
+// slab allocate struct for new task
+//
+// A timer callback wakes up the dispatcher thread.
+void register_task(pid_t pid, u32 period, u32 processing_time) {}
