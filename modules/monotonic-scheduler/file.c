@@ -77,7 +77,6 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 	}
 	default:
 		pr_err("Unknown operation: %c\n", op);
-		return count;
 	}
 
 	return count;
