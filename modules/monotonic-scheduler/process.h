@@ -17,37 +17,37 @@ void deregister_task(pid_t pid);
 struct task_struct *find_task_by_pid(int nr);
 
 enum TASK_STATE {
-	SLEEPING, // By default, newly registered tasks sleep.
+	SLEEPING, /* By default, newly registered tasks sleep. */
 	READY,
 	RUNNING,
 };
 
 struct task {
-	// Use this as param for scheduling API.
+	/* Use this as param for scheduling API. */
 	struct task_struct *linux_task;
-	// Wakes the dispatcher thread.
+	/* Wakes the dispatcher thread. */
 	struct timer_list wakeup_timer;
 
-	// Userspace process pid.
+	/* Userspace process pid. */
 	pid_t pid;
-	// Timer will periodically trigger the dispatcher thread.
+	/* Timer will periodically trigger the dispatcher thread. */
 	u32 period;
-	// Use to calculate admission control.
+	/* Use to calculate admission control. */
 	u32 processing_time;
-	// Current state of the registered task.
+	/* Current state of the registered task. */
 	enum TASK_STATE state;
 
 	struct list_head list;
 };
 
-// Guards access to tracked processes.
+/* Guards access to tracked processes. */
 static DEFINE_MUTEX(processes_mutex);
 
-// List of processes we track.
+/* List of processes we track. */
 extern struct list_head processes;
 
-// Currently running task.
-// TODO: Can we track min. period READY task? So we can avoid linear search.
+/* Currently running task. */
+/* TODO: Can we track min. period READY task? So we can avoid linear search. */
 extern struct task *ms_current_task;
 
 #endif

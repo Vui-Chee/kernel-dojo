@@ -9,15 +9,15 @@
 
 struct kmem_cache *task_cache;
 
-// Statically init the list.
+/* Statically init the list. */
 LIST_HEAD(processes);
 
 struct task *ms_current_task;
 
-// pid_t is signed int.
+/* pid_t is signed int. */
 struct task_struct *find_task_by_pid(int nr)
 {
-	struct task_struct *task; // kernel task
+	struct task_struct *task; /* kernel task */
 
 	rcu_read_lock();
 	task = pid_task(find_vpid(nr), PIDTYPE_PID);
@@ -35,11 +35,11 @@ static void task_ctor(void *obj)
 int process_init(void)
 {
 	task_cache = kmem_cache_create(
-		"processes_task_cache",   // cache name
-		sizeof(struct task),      // object size
-		0,                        // alignment (0 = default)
-		SLAB_HWCACHE_ALIGN,       // flags
-		task_ctor                 // constructor
+		"processes_task_cache",   /* cache name */
+		sizeof(struct task),      /* object size */
+		0,                        /* alignment (0 = default) */
+		SLAB_HWCACHE_ALIGN,       /* flags */
+		task_ctor                 /* constructor */
 	);
 	if (!task_cache)
 		return -ENOMEM;
@@ -55,13 +55,14 @@ void process_teardown(void)
 		kmem_cache_free(task_cache, t);
 	}
 	kmem_cache_destroy(task_cache);
-	task_cache = NULL; // prevent dangling pointers
+	task_cache = NULL; /* prevent dangling pointers */
 }
 
 static void wakeup_timer_handler(struct timer_list *t)
 {
+	/* from_timer(); */
 	pr_debug("Fire timer\n");
-	// TODO: set task to READY to be scheduled
+	/* TODO: set task to READY to be scheduled */
 }
 
 void register_task(pid_t pid, u32 period, u32 processing_time)
@@ -81,7 +82,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 		return;
 	}
 
-	tk->linux_task = get_task_struct(k_tk); // ref count to prevent kernel from freeing prematurely
+	tk->linux_task = get_task_struct(k_tk); /* ref count to prevent kernel from freeing prematurely */
 	tk->pid = pid;
 	tk->period = period;
 	tk->processing_time = processing_time;
@@ -109,7 +110,7 @@ void deregister_task(pid_t pid)
 
 			pr_debug("pid %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
 
-			// Rewire pointers.
+			/* Rewire pointers. */
 			list_del(&t->list);
 			put_task_struct(t->linux_task);
 			kmem_cache_free(task_cache, t);

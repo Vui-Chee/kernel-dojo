@@ -19,7 +19,7 @@ const struct proc_ops my_fops = {
 ssize_t on_proc_read(struct file *file, char __user *ubuf, size_t count,
 		     loff_t *ppos)
 {
-	// TODO: print process information
+	/* TODO: print process information */
 	return 0;
 }
 
@@ -32,7 +32,7 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 	if (count < 1 || count > PAGE_SIZE)
 		return -EINVAL;
 
-	// Copy data from user space to kernel space safely (including null-termination).
+	/* Copy data from user space to kernel space safely (including null-termination). */
 	char *kbuf __free(kfree) = memdup_user_nul(ubuf, count);
 	if (IS_ERR(kbuf))
 		return PTR_ERR(kbuf);

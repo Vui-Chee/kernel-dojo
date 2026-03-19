@@ -61,7 +61,7 @@ static void sched_best_task(void)
 			ms_current_task->state = RUNNING;
 		} else if (ms_current_task != NULL && ms_current_task->state == SLEEPING) {
 			preempt_task(ms_current_task->linux_task);
-			// NOTE: We do not modify the state of prev task.
+			/* NOTE: We do not modify the state of prev task. */
 
 			wakeup_task(best_tk->linux_task);
 			ms_current_task = best_tk;
