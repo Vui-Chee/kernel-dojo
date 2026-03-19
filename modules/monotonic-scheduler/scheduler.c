@@ -46,19 +46,32 @@ static void sched_best_task(void)
 	 *	1) new task has higher priority than current running task.
 	 *	2) no tasks, so pick highest READY task.
 	 */
-	if (ms_current_task == NULL && best_tk != NULL) {
-		wakeup_task(best_tk->linux_task);
+	if (best_tk) {
+		if (ms_current_task == NULL) {
+			wakeup_task(best_tk->linux_task);
+			ms_current_task = best_tk;
+			ms_current_task->state = RUNNING;
+		} else if (ms_current_task != NULL && ms_current_task->state == RUNNING && ms_current_task->period > best_tk->period) {
+			preempt_task(ms_current_task->linux_task);
+			ms_current_task->state = READY;
 
-		// Do not forget to set the current running task.
-		ms_current_task = best_tk;
-		ms_current_task->state = RUNNING;
-	} else if (ms_current_task != NULL && ms_current_task->period > best_tk->period) {
-		preempt_task(ms_current_task->linux_task);
-		ms_current_task->state = READY;
+			wakeup_task(best_tk->linux_task);
+			ms_current_task = best_tk;
+			ms_current_task->state = RUNNING;
+		} else if (ms_current_task != NULL && ms_current_task->state == SLEEPING) {
+			preempt_task(ms_current_task->linux_task);
+			// NOTE: We do not modify the state of prev task.
 
-		wakeup_task(best_tk->linux_task);
-		ms_current_task = best_tk;
-		ms_current_task->state = RUNNING;
+			wakeup_task(best_tk->linux_task);
+			ms_current_task = best_tk;
+			ms_current_task->state = RUNNING;
+		}
+	} else {
+		/* We still preempt the task, even though there is no new READY task. */
+		if (ms_current_task != NULL && ms_current_task->state == SLEEPING) {
+			preempt_task(ms_current_task->linux_task);
+			ms_current_task = NULL;
+		}
 	}
 
 done:
@@ -71,7 +84,7 @@ static int dispatch_fn(void *data)
 
 	while (!kthread_should_stop()) {
 
-		// sleep until condition becomes true
+		/* sleep until condition becomes true */
 		wait_event_interruptible(
 			dispatch_wq,
 			kthread_should_stop()
