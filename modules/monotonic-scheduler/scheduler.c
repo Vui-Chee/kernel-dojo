@@ -38,12 +38,11 @@ static void sched_best_task(void)
 		if (best_tk == NULL && t->state == READY) {
 			best_tk = t;
 			continue;
-		}
-		else if (t->state == READY && t->period < best_tk->period)
+		} else if (t->state == READY && t->period < best_tk->period)
 			best_tk = t;
 	}
 
-	/* Schedule new task if: 
+	/* Schedule new task if:
 	 *	1) new task has higher priority than current running task.
 	 *	2) no tasks, so pick highest READY task.
 	 */
@@ -53,9 +52,7 @@ static void sched_best_task(void)
 		// Do not forget to set the current running task.
 		ms_current_task = best_tk;
 		ms_current_task->state = RUNNING;
-	}
-
-	if (ms_current_task != NULL && ms_current_task->period > best_tk->period) {
+	} else if (ms_current_task != NULL && ms_current_task->period > best_tk->period) {
 		preempt_task(ms_current_task->linux_task);
 		ms_current_task->state = READY;
 

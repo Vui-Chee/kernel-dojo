@@ -11,7 +11,7 @@ struct kmem_cache *task_cache;
 // Statically init the list.
 LIST_HEAD(processes);
 
-struct task *ms_current_task = NULL;
+struct task *ms_current_task;
 
 // pid_t is signed int.
 struct task_struct *find_task_by_pid(int nr)
