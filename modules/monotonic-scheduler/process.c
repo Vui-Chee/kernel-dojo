@@ -11,6 +11,8 @@ struct kmem_cache *task_cache;
 // Statically init the list.
 LIST_HEAD(processes);
 
+struct task *ms_current_task = NULL;
+
 // pid_t is signed int.
 struct task_struct *find_task_by_pid(int nr)
 {
@@ -77,6 +79,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	tk->pid = pid;
 	tk->period = period;
 	tk->processing_time = processing_time;
+	tk->state = SLEEPING;
 
 	mutex_lock(&processes_mutex);
 	list_add_tail(&tk->list, &processes);

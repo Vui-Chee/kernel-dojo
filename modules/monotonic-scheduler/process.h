@@ -17,9 +17,9 @@ void deregister_task(pid_t pid);
 struct task_struct *find_task_by_pid(int nr);
 
 enum TASK_STATE {
-	RUNNING,
+	SLEEPING, // By default, newly registered tasks sleep.
 	READY,
-	SLEEPING // register task first with this state
+	RUNNING,
 };
 
 struct task {
@@ -40,10 +40,13 @@ struct task {
 	struct list_head list;
 };
 
-// Guards access to the linked list
+// Guards access to tracked processes.
 static DEFINE_MUTEX(processes_mutex);
 
 // List of processes we track.
 extern struct list_head processes;
+
+// Currently running task.
+extern struct task *ms_current_task;
 
 #endif
