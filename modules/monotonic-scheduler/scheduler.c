@@ -8,6 +8,7 @@
 
 #include "file.h"
 #include "process.h"
+#include "scheduler.h"
 
 #define PROC_TIME_DIR "monotonic_sched"
 #define PROCFS_FILE "status"
@@ -16,6 +17,56 @@ struct proc_dir_entry *dir;
 
 DECLARE_WAIT_QUEUE_HEAD(dispatch_wq);
 struct task_struct *dispatch_thread;
+
+/**
+ * Returns new task in READY state with highest priority.
+ *
+ * highest priority for now means task with the lowest period.
+ */
+static void sched_best_task(void)
+{
+	struct task *t, *tmp;
+
+	mutex_lock(&processes_mutex);
+	if (list_empty(&processes))
+		goto done;
+
+	/* Need to check if it's in READY state */
+	struct task *best_tk;
+
+	list_for_each_entry_safe(t, tmp, &processes, list) {
+		if (best_tk == NULL && t->state == READY) {
+			best_tk = t;
+			continue;
+		}
+		else if (t->state == READY && t->period < best_tk->period)
+			best_tk = t;
+	}
+
+	/* Schedule new task if: 
+	 *	1) new task has higher priority than current running task.
+	 *	2) no tasks, so pick highest READY task.
+	 */
+	if (ms_current_task == NULL && best_tk != NULL) {
+		wakeup_task(best_tk->linux_task);
+
+		// Do not forget to set the current running task.
+		ms_current_task = best_tk;
+		ms_current_task->state = RUNNING;
+	}
+
+	if (ms_current_task != NULL && ms_current_task->period > best_tk->period) {
+		preempt_task(ms_current_task->linux_task);
+		ms_current_task->state = READY;
+
+		wakeup_task(best_tk->linux_task);
+		ms_current_task = best_tk;
+		ms_current_task->state = RUNNING;
+	}
+
+done:
+	mutex_unlock(&processes_mutex);
+}
 
 static int dispatch_fn(void *data)
 {
@@ -32,12 +83,8 @@ static int dispatch_fn(void *data)
 		if (kthread_should_stop())
 			break;
 
-		// TODO: Your dispatch logic here.
-		// Wakeup timer wakes up dispatch_thread.
-		pr_debug("dispatcher woke up, doing work\n");
-		msleep(1000);
-
-		pr_debug("dispatcher finished work\n");
+		pr_debug("dispatcher woke up, find task to wake up\n");
+		sched_best_task();
 	}
 
 	pr_warn("dispatch thread exiting\n");
@@ -67,6 +114,8 @@ static int __init init_scheduler(void)
 	}
 
 	dispatch_thread = kthread_run(dispatch_fn, NULL, "dispatcher");
+	if (IS_ERR(dispatch_thread))
+		return PTR_ERR(dispatch_thread);
 
 	pr_debug("Module initialized success.\n");
 	return 0;
