@@ -6,6 +6,7 @@
 #include <linux/timer.h>
 
 #include "process.h"
+#include "scheduler.h"
 
 struct kmem_cache *task_cache;
 
@@ -68,7 +69,10 @@ static void wakeup_timer_handler(struct timer_list *t)
 	tk = container_of(t, struct task, wakeup_timer);
 
 	pr_debug("PID %d. Fire timer\n", tk->pid);
-	/* TODO: set task to READY to be scheduled */
+	spin_lock(&processes_lock);
+	tk->state = READY;
+	wake_up_interruptible(&dispatch_wq);
+	spin_unlock(&processes_lock);
 }
 
 void register_task(pid_t pid, u32 period, u32 processing_time)

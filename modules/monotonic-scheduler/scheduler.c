@@ -18,6 +18,25 @@ struct proc_dir_entry *dir;
 DECLARE_WAIT_QUEUE_HEAD(dispatch_wq);
 struct task_struct *dispatch_thread;
 
+void wakeup_task(struct task_struct *task)
+{
+	struct sched_attr attr;
+
+	wake_up_process(task);
+	attr.sched_policy = SCHED_FIFO;
+	attr.sched_priority = 99;
+	sched_setattr_nocheck(task, &attr);
+}
+
+void preempt_task(struct task_struct *task)
+{
+	struct sched_attr attr;
+
+	attr.sched_policy = SCHED_NORMAL;
+	attr.sched_priority = 0;
+	sched_setattr_nocheck(task, &attr);
+}
+
 /**
  * Returns new task in READY state with highest priority.
  *
