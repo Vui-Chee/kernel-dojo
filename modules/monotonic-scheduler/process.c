@@ -3,6 +3,7 @@
 
 #include <linux/sched/task.h>
 #include <linux/slab.h>
+#include <linux/timer.h>
 
 #include "process.h"
 
@@ -57,6 +58,12 @@ void process_teardown(void)
 	task_cache = NULL; // prevent dangling pointers
 }
 
+static void wakeup_timer_handler(struct timer_list *t)
+{
+	pr_debug("Fire timer\n");
+	// TODO: set task to READY to be scheduled
+}
+
 void register_task(pid_t pid, u32 period, u32 processing_time)
 {
 	struct task *tk;
@@ -74,12 +81,15 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 		return;
 	}
 
-	// TODO: setup timer.
 	tk->linux_task = get_task_struct(k_tk); // ref count to prevent kernel from freeing prematurely
 	tk->pid = pid;
 	tk->period = period;
 	tk->processing_time = processing_time;
 	tk->state = SLEEPING;
+
+	/* Fire timer period(ms) from now. */
+	timer_setup(&tk->wakeup_timer, wakeup_timer_handler, 0);
+	mod_timer(&tk->wakeup_timer, jiffies + msecs_to_jiffies(period));
 
 	mutex_lock(&processes_mutex);
 	list_add_tail(&tk->list, &processes);
@@ -87,6 +97,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	mutex_unlock(&processes_mutex);
 }
 
+/* TODO: Can we use a map<pid, task ptr> to reduce deletion to O(1). */
 void deregister_task(pid_t pid)
 {
 	struct task *t, *tmp;
@@ -94,6 +105,10 @@ void deregister_task(pid_t pid)
 	mutex_lock(&processes_mutex);
 	list_for_each_entry_safe(t, tmp, &processes, list) {
 		if (t->pid == pid) {
+			int pending = timer_delete_sync(&t->wakeup_timer);
+
+			pr_debug("pid %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
+
 			// Rewire pointers.
 			list_del(&t->list);
 			put_task_struct(t->linux_task);

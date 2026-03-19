@@ -23,7 +23,14 @@ int __deregister(int pid)
 }
 
 // writes to the proc filesystem, kernel module puts application to sleep
-void __yield(void) {}
+void __yield(int pid)
+{
+	char string[50];
+
+	sprintf(string, "echo -n \'Y,%d\' > /proc/monotonic_sched/status", pid);
+	printf("%s\n", string);
+	return system(string);
+}
 
 void __read_fs(void) {}
 
@@ -38,40 +45,17 @@ int main(void)
 {
 	int pid = getpid();
 	unsigned int p_time = 3000; // ms
-	unsigned int period = 100; // ms
+	unsigned int period = 1000; // ms
 
 	__register(pid, period, p_time);
 
-	// TODO: read() from procfile to verify process is added
+	__yield(pid);
 
 	__job(100);
-	printf("sleeping...\n");
-	sleep(30);
+	printf("finished work...\n");
 
 	__deregister(pid);
 
 	printf("finished\n");
 	return 0;
 }
-
-/*
- * REGISTER(pid, period, processing_time);
- * // Read ProcFS: Verify the process was admitted
- * list = READ(ProcFS);
- * if (!process in the list) exit(1);
- * // setup everything needed for RT loop
- * t0 = clock_gettime();
- * // Proc filesystem
- * YIELD(PID);
- * // this is the real-time loop
- * while (exist jobs)
- * {
- *	wakeup_time = clock_gettime() - t0;
- *	// factorial computation
- *	do_job();
- *	process_time = clock_gettime() - wakeup_time;
- *	YIELD(PID);
- * }
- * // Interact with ProcFS
- * DEREGISTER(PID);
- */

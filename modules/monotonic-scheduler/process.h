@@ -47,6 +47,7 @@ static DEFINE_MUTEX(processes_mutex);
 extern struct list_head processes;
 
 // Currently running task.
+// TODO: Can we track min. period READY task? So we can avoid linear search.
 extern struct task *ms_current_task;
 
 #endif

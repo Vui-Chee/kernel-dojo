@@ -68,7 +68,7 @@ static void sched_best_task(void)
 			ms_current_task->state = RUNNING;
 		}
 	} else {
-		/* We still preempt the task, even though there is no new READY task. */
+		/* We will still preempt the task, even though there is no new READY task. */
 		if (ms_current_task != NULL && ms_current_task->state == SLEEPING) {
 			preempt_task(ms_current_task->linux_task);
 			ms_current_task = NULL;
