@@ -3,6 +3,8 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/proc_fs.h>
+#include <linux/kthread.h>
+#include <linux/delay.h>
 
 #include "file.h"
 #include "process.h"
@@ -11,6 +13,36 @@
 #define PROCFS_FILE "status"
 
 struct proc_dir_entry *dir;
+
+DECLARE_WAIT_QUEUE_HEAD(dispatch_wq);
+struct task_struct *dispatch_thread;
+
+static int dispatch_fn(void *data)
+{
+    pr_debug("Dispatch thread started\n");
+
+    while (!kthread_should_stop()) {
+
+        // sleep until condition becomes true
+        wait_event_interruptible(
+            dispatch_wq,
+            kthread_should_stop()
+        );
+
+        if (kthread_should_stop())
+            break;
+
+        // TODO: Your dispatch logic here.
+	// Wakeup timer wakes up dispatch_thread.
+        pr_debug("dispatcher woke up, doing work\n");
+        msleep(1000);
+
+        pr_debug("dispatcher finished work\n");
+    }
+
+    pr_warn("dispatch thread exiting\n");
+    return 0;
+}
 
 static int __init init_scheduler(void)
 {
@@ -34,6 +66,8 @@ static int __init init_scheduler(void)
 		return errno;
 	}
 
+	dispatch_thread = kthread_run(dispatch_fn, NULL, "dispatcher");
+
 	pr_debug("Module initialized success.\n");
 	return 0;
 }
@@ -41,6 +75,10 @@ static int __init init_scheduler(void)
 static void __exit exit_scheduler(void)
 {
 	pr_debug("Stopping scheduler. Deregistering all processes.\n");
+
+	if (dispatch_thread)
+		kthread_stop(dispatch_thread);
+
 	process_teardown();
 
 	remove_proc_entry(PROCFS_FILE, dir);
