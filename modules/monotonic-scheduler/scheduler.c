@@ -44,7 +44,8 @@ static void sched_best_task(void)
 
 	/* Schedule new task if:
 	 *	1) new task has higher priority than current running task.
-	 *	2) no tasks, so pick highest READY task.
+	 *	2) no current task, so pick highest READY task.
+	 *	3) current task is sleeping, pick highest READY task.
 	 */
 	if (best_tk) {
 		if (ms_current_task == NULL) {
@@ -93,7 +94,7 @@ static int dispatch_fn(void *data)
 		if (kthread_should_stop())
 			break;
 
-		pr_debug("dispatcher woke up, find task to wake up\n");
+		pr_debug("dispatcher woke up, find next best task to run\n");
 		sched_best_task();
 	}
 
