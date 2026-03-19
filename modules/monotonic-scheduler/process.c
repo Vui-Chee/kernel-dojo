@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 #define DEBUG
 
+#include <linux/sched/task.h>
 #include <linux/slab.h>
 
 #include "process.h"
@@ -59,9 +60,10 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	struct task *tk;
 
 	tk = kmem_cache_alloc(task_cache, GFP_KERNEL);
-	if (!tk)
+	if (!tk) {
 		pr_err("Failed to cache alloc process with pid %d.\n", pid);
 		return;
+	}
 
 	struct task_struct *k_tk = find_task_by_pid(pid);
 
@@ -71,7 +73,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	}
 
 	// TODO: setup timer.
-	tk->linux_task = k_tk;
+	tk->linux_task = get_task_struct(k_tk); // ref count to prevent kernel from freeing prematurely
 	tk->pid = pid;
 	tk->period = period;
 	tk->processing_time = processing_time;
@@ -91,6 +93,7 @@ void deregister_task(pid_t pid)
 		if (t->pid == pid) {
 			// Rewire pointers.
 			list_del(&t->list);
+			put_task_struct(t->linux_task);
 			kmem_cache_free(task_cache, t);
 			pr_debug("Removed item to list, count = %ld\n", list_count_nodes(&processes));
 			goto done;
