@@ -51,6 +51,9 @@ void process_teardown(void)
 	struct task *t, *tmp;
 
 	list_for_each_entry_safe(t, tmp, &processes, list) {
+		int pending = timer_delete_sync(&t->wakeup_timer);
+
+		pr_debug("(teardown) PID %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
 		list_del_init(&t->list);
 		kmem_cache_free(task_cache, t);
 	}
@@ -60,8 +63,11 @@ void process_teardown(void)
 
 static void wakeup_timer_handler(struct timer_list *t)
 {
-	/* from_timer(); */
-	pr_debug("Fire timer\n");
+	struct task *tk;
+
+	tk = container_of(t, struct task, wakeup_timer);
+
+	pr_debug("PID %d. Fire timer\n", tk->pid);
 	/* TODO: set task to READY to be scheduled */
 }
 
@@ -108,7 +114,7 @@ void deregister_task(pid_t pid)
 		if (t->pid == pid) {
 			int pending = timer_delete_sync(&t->wakeup_timer);
 
-			pr_debug("pid %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
+			pr_debug("PID %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
 
 			/* Rewire pointers. */
 			list_del(&t->list);
