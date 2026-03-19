@@ -27,7 +27,7 @@ static void sched_best_task(void)
 {
 	struct task *t, *tmp;
 
-	mutex_lock(&processes_mutex);
+	spin_lock_bh(&processes_lock);
 	if (list_empty(&processes))
 		goto done;
 
@@ -76,7 +76,7 @@ static void sched_best_task(void)
 	}
 
 done:
-	mutex_unlock(&processes_mutex);
+	spin_unlock_bh(&processes_lock);
 }
 
 static int dispatch_fn(void *data)

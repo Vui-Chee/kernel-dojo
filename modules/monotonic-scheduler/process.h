@@ -40,8 +40,8 @@ struct task {
 	struct list_head list;
 };
 
-/* Guards access to tracked processes. TODO: swap out for spinlock */
-static DEFINE_MUTEX(processes_mutex);
+/* Guards access to tracked processes. */
+static DEFINE_SPINLOCK(processes_lock);
 
 /* List of processes we track. */
 extern struct list_head processes;

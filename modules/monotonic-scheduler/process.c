@@ -98,33 +98,33 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	timer_setup(&tk->wakeup_timer, wakeup_timer_handler, 0);
 	mod_timer(&tk->wakeup_timer, jiffies + msecs_to_jiffies(period));
 
-	mutex_lock(&processes_mutex);
+	spin_lock_bh(&processes_lock);
 	list_add_tail(&tk->list, &processes);
 	pr_debug("Add item to list, count = %ld\n", list_count_nodes(&processes));
-	mutex_unlock(&processes_mutex);
+	spin_unlock_bh(&processes_lock);
 }
 
 /* TODO: Can we use a map<pid, task ptr> to reduce deletion to O(1). */
 void deregister_task(pid_t pid)
 {
 	struct task *t, *tmp;
+	struct task *found = NULL;
 
-	mutex_lock(&processes_mutex);
+	spin_lock_bh(&processes_lock);
 	list_for_each_entry_safe(t, tmp, &processes, list) {
 		if (t->pid == pid) {
-			int pending = timer_delete_sync(&t->wakeup_timer);
-
-			pr_debug("PID %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
-
-			/* Rewire pointers. */
 			list_del(&t->list);
-			put_task_struct(t->linux_task);
-			kmem_cache_free(task_cache, t);
-			pr_debug("Removed item to list, count = %ld\n", list_count_nodes(&processes));
-			goto done;
+			found = t;
+			break;
 		}
 	}
+	spin_unlock_bh(&processes_lock);
 
-done:
-	mutex_unlock(&processes_mutex);
+	if (found) {
+		int pending = timer_delete_sync(&found->wakeup_timer);
+
+		pr_debug("PID %d. Timer deleted, pending callbacks: %d\n", found->pid, pending);
+		put_task_struct(found->linux_task);
+		kmem_cache_free(task_cache, found);
+	}
 }
