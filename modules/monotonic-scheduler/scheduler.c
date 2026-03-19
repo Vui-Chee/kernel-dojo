@@ -19,29 +19,29 @@ struct task_struct *dispatch_thread;
 
 static int dispatch_fn(void *data)
 {
-    pr_debug("Dispatch thread started\n");
+	pr_debug("Dispatch thread started\n");
 
-    while (!kthread_should_stop()) {
+	while (!kthread_should_stop()) {
 
-        // sleep until condition becomes true
-        wait_event_interruptible(
-            dispatch_wq,
-            kthread_should_stop()
-        );
+		// sleep until condition becomes true
+		wait_event_interruptible(
+			dispatch_wq,
+			kthread_should_stop()
+		);
 
-        if (kthread_should_stop())
-            break;
+		if (kthread_should_stop())
+			break;
 
-        // TODO: Your dispatch logic here.
-	// Wakeup timer wakes up dispatch_thread.
-        pr_debug("dispatcher woke up, doing work\n");
-        msleep(1000);
+		// TODO: Your dispatch logic here.
+		// Wakeup timer wakes up dispatch_thread.
+		pr_debug("dispatcher woke up, doing work\n");
+		msleep(1000);
 
-        pr_debug("dispatcher finished work\n");
-    }
+		pr_debug("dispatcher finished work\n");
+	}
 
-    pr_warn("dispatch thread exiting\n");
-    return 0;
+	pr_warn("dispatch thread exiting\n");
+	return 0;
 }
 
 static int __init init_scheduler(void)
