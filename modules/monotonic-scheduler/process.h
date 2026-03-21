@@ -14,6 +14,8 @@ void register_task(pid_t pid, u32 period, u32 processing_time);
 
 void deregister_task(pid_t pid);
 
+void yield_task(pid_t pid);
+
 struct task_struct *find_task_by_pid(int nr);
 
 enum TASK_STATE {

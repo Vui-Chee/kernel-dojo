@@ -73,6 +73,7 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 			break;
 		}
 		pr_debug("Yield: %c,%d\n", op, pid);
+		yield_task(pid);
 		break;
 	}
 	default:

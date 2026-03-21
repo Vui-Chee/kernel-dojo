@@ -132,3 +132,25 @@ void deregister_task(pid_t pid)
 		kmem_cache_free(task_cache, found);
 	}
 }
+
+void yield_task(pid_t pid)
+{
+	struct task *t, *tmp;
+	struct task *found = NULL;
+
+	/* Locate the task to yield. */
+	spin_lock_bh(&processes_lock);
+	list_for_each_entry_safe(t, tmp, &processes, list) {
+		if (t->pid == pid) {
+			found = t;
+			break;
+		}
+	}
+
+	if (found) {
+		found->state = SLEEPING;
+		set_current_state(TASK_UNINTERRUPTIBLE);
+		schedule();
+	}
+	spin_unlock_bh(&processes_lock);
+}
