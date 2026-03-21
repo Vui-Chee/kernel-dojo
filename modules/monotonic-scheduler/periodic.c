@@ -6,33 +6,49 @@
 #include <sched.h>
 #include <unistd.h>
 #include <time.h>
+#include <fcntl.h>
 
 int register_job(int pid, unsigned int period, unsigned int p_time)
 {
-	char string[100];
+	char buf[100];
+	int len = snprintf(buf, sizeof(buf), "R,%d,%u,%u", pid, period, p_time);
+	int fd = open("/proc/monotonic_sched/status", O_WRONLY);
 
-	sprintf(string, "echo -n \'R,%d,%u,%u\' > /proc/monotonic_sched/status", pid, period, p_time);
-	printf("%s\n", string);
-	return system(string);
+	if (fd < 0)
+		return -1;
+	int ret = write(fd, buf, len);
+
+	close(fd);
+	return ret;
 }
 
 int deregister_job(int pid)
 {
-	char string[50];
+	char buf[50];
+	int len = snprintf(buf, sizeof(buf), "D,%d", pid);
+	int fd = open("/proc/monotonic_sched/status", O_WRONLY);
 
-	sprintf(string, "echo -n \'D,%d\' > /proc/monotonic_sched/status", pid);
-	printf("%s\n", string);
-	return system(string);
+	if (fd < 0)
+		return -1;
+	int ret = write(fd, buf, len);
+
+	close(fd);
+	return ret;
 }
 
 /* Kernel will put application to sleep */
 int yield_job(int pid)
 {
-	char string[50];
+	char buf[50];
+	int len = snprintf(buf, sizeof(buf), "Y,%d", pid);
+	int fd = open("/proc/monotonic_sched/status", O_WRONLY);
 
-	sprintf(string, "echo -n \'Y,%d\' > /proc/monotonic_sched/status", pid);
-	printf("%s\n", string);
-	return system(string);
+	if (fd < 0)
+		return -1;
+	int ret = write(fd, buf, len);
+
+	close(fd);
+	return ret;
 }
 
 bool in_fs(pid_t pid)
@@ -135,7 +151,7 @@ int main(void)
 		yield_job(pid);
 	}
 
-	// deregister_job(pid);
+	deregister_job(pid);
 	printf("PID %d: finished job\n", pid);
 	return EXIT_SUCCESS;
 }
