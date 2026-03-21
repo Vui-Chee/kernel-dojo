@@ -135,12 +135,11 @@ void deregister_task(pid_t pid)
 
 void yield_task(pid_t pid)
 {
-	struct task *t, *tmp;
-	struct task *found = NULL;
+	struct task *t, *found = NULL;
 
 	/* Locate the task to yield. */
 	spin_lock_bh(&processes_lock);
-	list_for_each_entry_safe(t, tmp, &processes, list) {
+	list_for_each_entry(t, &processes, list) {
 		if (t->pid == pid) {
 			found = t;
 			break;
