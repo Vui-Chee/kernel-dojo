@@ -4,7 +4,7 @@
 #include <sched.h>
 #include <unistd.h>
 
-int __register(int pid, unsigned int period, unsigned int p_time)
+int register_job(int pid, unsigned int period, unsigned int p_time)
 {
 	char string[100];
 
@@ -13,7 +13,7 @@ int __register(int pid, unsigned int period, unsigned int p_time)
 	return system(string);
 }
 
-int __deregister(int pid)
+int deregister_job(int pid)
 {
 	char string[50];
 
@@ -23,7 +23,7 @@ int __deregister(int pid)
 }
 
 // writes to the proc filesystem, kernel module puts application to sleep
-void __yield(int pid)
+void yield_job(int pid)
 {
 	char string[50];
 
@@ -32,9 +32,9 @@ void __yield(int pid)
 	return system(string);
 }
 
-void __read_fs(void) {}
+void read_fs(void) {}
 
-int __job(int n)
+int job(int n)
 {
 	if (n <= 1)
 		return 1;
@@ -44,17 +44,19 @@ int __job(int n)
 int main(void)
 {
 	int pid = getpid();
+	// TODO: randomize time
 	unsigned int p_time = 3000; // ms
-	unsigned int period = 1000; // ms
+	unsigned int period = 500; // ms
 
-	__register(pid, period, p_time);
+	register_job(pid, period, p_time);
 
-	__yield(pid);
+	yield_job(pid);
 
-	__job(100);
+	job(1000);
+	// sleep(3);
 	printf("finished work...\n");
 
-	__deregister(pid);
+	deregister_job(pid);
 
 	printf("finished\n");
 	return 0;
