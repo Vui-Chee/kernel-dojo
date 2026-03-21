@@ -156,10 +156,12 @@ static void __exit exit_scheduler(void)
 		kthread_stop(dispatch_thread);
 
 	process_teardown();
+	pr_warn("Finished process teardown\n");
 
 	remove_proc_entry(PROCFS_FILE, dir);
+	pr_warn("Removed file %s\n", PROCFS_FILE);
 	remove_proc_entry(PROC_TIME_DIR, NULL);
-	pr_debug("Removed folder %s\n", PROC_TIME_DIR);
+	pr_warn("Removed folder %s\n", PROC_TIME_DIR);
 }
 
 module_init(init_scheduler);

@@ -4,6 +4,7 @@
 #include <linux/sched/task.h>
 #include <linux/slab.h>
 #include <linux/timer.h>
+#include <linux/sched/signal.h>
 
 #include "process.h"
 #include "scheduler.h"
@@ -54,7 +55,8 @@ void process_teardown(void)
 	list_for_each_entry_safe(t, tmp, &processes, list) {
 		int pending = timer_delete_sync(&t->wakeup_timer);
 
-		pr_debug("(teardown) PID %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
+		pr_warn("(teardown) PID %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
+		send_sig(SIGKILL, t->linux_task, 1); /* kill the task to release the file */
 		list_del_init(&t->list);
 		kmem_cache_free(task_cache, t);
 	}
@@ -73,6 +75,7 @@ static void wakeup_timer_handler(struct timer_list *t)
 	tk->state = READY;
 	wake_up_interruptible(&dispatch_wq);
 	spin_unlock(&processes_lock);
+	pr_debug("PID %d. Timer handler completed\n", tk->pid);
 }
 
 void register_task(pid_t pid, u32 period, u32 processing_time)
@@ -148,7 +151,8 @@ void yield_task(pid_t pid)
 	spin_unlock_bh(&processes_lock);
 
 	if (found) {
-		set_current_state(TASK_UNINTERRUPTIBLE);
+		pr_debug("Putting task %d to sleep...\n", t->pid);
+		set_current_state(TASK_KILLABLE); /* allow sleep plus reaping */
 		schedule();
 	}
 }
