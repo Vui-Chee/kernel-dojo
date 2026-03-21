@@ -10,9 +10,6 @@
 #include "process.h"
 #include "scheduler.h"
 
-#define PROC_TIME_DIR "monotonic_sched"
-#define PROCFS_FILE "status"
-
 struct proc_dir_entry *dir;
 
 DECLARE_WAIT_QUEUE_HEAD(dispatch_wq);
@@ -40,11 +37,11 @@ void preempt_task(struct task_struct *task)
 /**
  * Returns new task in READY state with highest priority.
  *
- * highest priority for now means task with the lowest period.
+ * Highest priority for now means task with the lowest period.
  */
 static void sched_best_task(void)
 {
-	struct task *t, *tmp;
+	struct task *t;
 
 	spin_lock_bh(&processes_lock);
 	if (list_empty(&processes))
@@ -53,7 +50,7 @@ static void sched_best_task(void)
 	/* Need to check if it's in READY state */
 	struct task *best_tk;
 
-	list_for_each_entry_safe(t, tmp, &processes, list) {
+	list_for_each_entry(t, &processes, list) {
 		if (best_tk == NULL && t->state == READY) {
 			best_tk = t;
 			continue;

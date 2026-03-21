@@ -4,6 +4,9 @@
 
 #include <uapi/linux/sched/types.h>
 
+#define PROC_TIME_DIR "monotonic_sched"
+#define PROCFS_FILE "status"
+
 extern wait_queue_head_t dispatch_wq;
 
 void wakeup_task(struct task_struct *task);

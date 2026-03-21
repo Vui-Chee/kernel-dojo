@@ -19,8 +19,30 @@ const struct proc_ops my_fops = {
 ssize_t on_proc_read(struct file *file, char __user *ubuf, size_t count,
 		     loff_t *ppos)
 {
-	/* TODO: print process information */
-	return 0;
+	struct task *t;
+	int buf_len = 32;	/* enough for one pid and newline */
+	char pid_str[buf_len];
+	int total_len = 0;
+	int len = 0;
+
+	spin_lock_bh(&processes_lock);
+	list_for_each_entry(t, &processes, list) {
+		len = scnprintf(pid_str, buf_len, "%d: %u, %u\n", t->pid,
+				t->period, t->processing_time);
+
+		if (copy_to_user(ubuf, pid_str, len))
+			return -EFAULT;
+		ubuf += len;
+		total_len += len;
+	}
+	spin_unlock_bh(&processes_lock);
+
+	// Stop reading.
+	if (*ppos >= total_len)
+		return 0;
+
+	*ppos += total_len;
+	return total_len;	/* return number of bytes read */
 }
 
 ssize_t on_proc_write(struct file *file, const char __user *ubuf,

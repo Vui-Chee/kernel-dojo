@@ -137,7 +137,6 @@ void yield_task(pid_t pid)
 {
 	struct task *t, *found = NULL;
 
-	/* Locate the task to yield. */
 	spin_lock_bh(&processes_lock);
 	list_for_each_entry(t, &processes, list) {
 		if (t->pid == pid) {
