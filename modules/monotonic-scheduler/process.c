@@ -141,14 +141,14 @@ void yield_task(pid_t pid)
 	list_for_each_entry(t, &processes, list) {
 		if (t->pid == pid) {
 			found = t;
+			found->state = SLEEPING;
 			break;
 		}
 	}
+	spin_unlock_bh(&processes_lock);
 
 	if (found) {
-		found->state = SLEEPING;
 		set_current_state(TASK_UNINTERRUPTIBLE);
 		schedule();
 	}
-	spin_unlock_bh(&processes_lock);
 }
