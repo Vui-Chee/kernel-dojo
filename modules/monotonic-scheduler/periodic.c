@@ -137,7 +137,7 @@ int main(void)
 		clock_gettime(CLOCK_MONOTONIC, &ts);
 		uint64_t wakeup_ns = in_ns(&ts);
 
-		job(p_time);
+		job(p_time); /* p_time < period */
 
 		clock_gettime(CLOCK_MONOTONIC, &ts);
 		uint64_t processing_ns = in_ns(&ts);

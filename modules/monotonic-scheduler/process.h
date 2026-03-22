@@ -38,7 +38,7 @@ struct task {
 	u32 period;
 	/* Use to calculate admission control. */
 	u32 processing_time;
-	/* Last release time. */
+	/* Last release time for wakeup timer. */
 	unsigned long last_release;
 
 	struct list_head list;
