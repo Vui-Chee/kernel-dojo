@@ -7,6 +7,8 @@
 #define PROC_TIME_DIR "monotonic_sched"
 #define PROCFS_FILE "status"
 
+extern struct task *ms_current_task;
+
 extern struct task_struct *dispatch_thread;
 
 void wakeup_task(struct task_struct *task);

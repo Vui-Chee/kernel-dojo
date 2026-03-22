@@ -122,6 +122,9 @@ void deregister_task(pid_t pid)
 		if (t->pid == pid) {
 			list_del(&t->list);
 			found = t;
+
+			if (found == ms_current_task)
+				ms_current_task = NULL;
 			break;
 		}
 	}
@@ -133,6 +136,9 @@ void deregister_task(pid_t pid)
 		pr_debug("PID %d. Timer deleted, pending callbacks: %d\n", found->pid, pending);
 		put_task_struct(found->linux_task);
 		kmem_cache_free(task_cache, found);
+
+		/* Schedule other tasks. Otherwise, tasks will be idle. */
+		wake_up_process(dispatch_thread);
 	}
 }
 

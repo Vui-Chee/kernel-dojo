@@ -69,7 +69,7 @@ static void sched_best_task(void)
 	 *	2) no current task, so pick highest READY task.
 	 *	3) current task is sleeping, pick highest READY task.
 	 */
-	if (best_tk) {
+	if (best_tk) { /* always in READY state. */
 		if (ms_current_task == NULL) {
 			pr_debug("PID %d: first running task\n", best_tk->pid);
 			wakeup_task(best_tk->linux_task);
@@ -91,17 +91,11 @@ static void sched_best_task(void)
 			wakeup_task(best_tk->linux_task);
 			ms_current_task = best_tk;
 			ms_current_task->state = RUNNING;
-		} else if (ms_current_task != NULL && best_tk->state == READY) {
-			pr_debug("PID %d: current task is READY.\n", best_tk->pid);
-			wakeup_task(best_tk->linux_task);
-			ms_current_task = best_tk;
-			ms_current_task->state = RUNNING;
 		} else {
 			pr_warn("PID %d: unknown state trasition with READY task.\n", best_tk->pid);
 			if (ms_current_task)
 				pr_warn("Curr task %d, state = %d\n", ms_current_task->pid, ms_current_task->state);
 		}
-		// TODO: RUNNING -> SLEEPING (current task is finished)
 	} else {
 		/* We will still preempt the task, even though there is no new READY task. */
 		if (ms_current_task != NULL && ms_current_task->state == SLEEPING) {
