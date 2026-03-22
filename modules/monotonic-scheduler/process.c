@@ -73,8 +73,10 @@ static void wakeup_timer_handler(struct timer_list *t)
 	pr_debug("PID %d. Fire timer\n", tk->pid);
 	spin_lock(&processes_lock);
 	tk->state = READY;
-	wake_up_interruptible(&dispatch_wq);
+	tk->last_release = jiffies; /* tracks actual last release */
 	spin_unlock(&processes_lock);
+
+	wake_up_interruptible(&dispatch_wq);
 	pr_debug("PID %d. Timer handler completed\n", tk->pid);
 }
 
@@ -100,10 +102,10 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	tk->period = period;
 	tk->processing_time = processing_time;
 	tk->state = SLEEPING;
+	tk->last_release = jiffies;
 
 	/* Fire timer period(ms) from now. */
 	timer_setup(&tk->wakeup_timer, wakeup_timer_handler, 0);
-	mod_timer(&tk->wakeup_timer, jiffies + msecs_to_jiffies(period));
 
 	spin_lock_bh(&processes_lock);
 	list_add_tail(&tk->list, &processes);
@@ -151,8 +153,14 @@ void yield_task(pid_t pid)
 	spin_unlock_bh(&processes_lock);
 
 	if (found) {
+		unsigned long next_release = found->last_release + msecs_to_jiffies(found->period);
+
+		/* Arm the timer if next release exceeds current time. */
+		if (time_after(next_release, jiffies))
+			mod_timer(&found->wakeup_timer, next_release);
+
 		pr_debug("Putting task %d to sleep...\n", t->pid);
-		set_current_state(TASK_KILLABLE); /* allow sleep plus reaping */
+		set_current_state(TASK_KILLABLE); /* allow sleep plus reaping if rmmod early */
 		schedule();
 	}
 }

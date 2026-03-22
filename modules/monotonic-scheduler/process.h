@@ -30,14 +30,16 @@ struct task {
 	/* Wakes the dispatcher thread. */
 	struct timer_list wakeup_timer;
 
+	/* Current state of the registered task. */
+	enum TASK_STATE state;
 	/* Userspace process pid. */
 	pid_t pid;
 	/* Timer will periodically trigger the dispatcher thread. */
 	u32 period;
 	/* Use to calculate admission control. */
 	u32 processing_time;
-	/* Current state of the registered task. */
-	enum TASK_STATE state;
+	/* Last release time. */
+	unsigned long last_release;
 
 	struct list_head list;
 };
