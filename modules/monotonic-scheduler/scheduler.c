@@ -15,7 +15,6 @@ struct proc_dir_entry *dir;
 struct task_struct *dispatch_thread;
 
 /* Currently running task. */
-/* TODO: Can we track min. period READY task? So we can avoid linear search. */
 struct task *ms_current_task;
 
 void wakeup_task(struct task_struct *task)
@@ -53,7 +52,7 @@ static void sched_best_task(void)
 	}
 
 	/* Need to check if it's in READY state */
-	struct task *best_tk;
+	struct task *best_tk = NULL;
 
 	list_for_each_entry(t, &processes, list) {
 		if (best_tk == NULL && t->state == READY) {

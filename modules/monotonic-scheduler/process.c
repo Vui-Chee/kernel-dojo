@@ -111,7 +111,6 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	spin_unlock_bh(&processes_lock);
 }
 
-/* TODO: Can we use a map<pid, task ptr> to reduce deletion to O(1). */
 void deregister_task(pid_t pid)
 {
 	struct task *t, *tmp;
