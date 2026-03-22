@@ -7,7 +7,7 @@
 #define PROC_TIME_DIR "monotonic_sched"
 #define PROCFS_FILE "status"
 
-extern wait_queue_head_t dispatch_wq;
+extern struct task_struct *dispatch_thread;
 
 void wakeup_task(struct task_struct *task);
 

@@ -14,8 +14,6 @@ struct kmem_cache *task_cache;
 /* Statically init the list. */
 LIST_HEAD(processes);
 
-struct task *ms_current_task;
-
 /* pid_t is signed int. */
 struct task_struct *find_task_by_pid(int nr)
 {
@@ -70,13 +68,13 @@ static void wakeup_timer_handler(struct timer_list *t)
 
 	tk = container_of(t, struct task, wakeup_timer);
 
-	pr_debug("PID %d. Fire timer\n", tk->pid);
+	pr_debug("PID %d. Fire timer at %ul\n", tk->pid, jiffies_to_msecs(tk->last_release));
 	spin_lock(&processes_lock);
 	tk->state = READY;
 	tk->last_release = jiffies; /* tracks actual last release */
 	spin_unlock(&processes_lock);
 
-	wake_up_interruptible(&dispatch_wq);
+	wake_up_process(dispatch_thread);
 	pr_debug("PID %d. Timer handler completed\n", tk->pid);
 }
 

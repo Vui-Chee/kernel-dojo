@@ -12,8 +12,11 @@
 
 struct proc_dir_entry *dir;
 
-DECLARE_WAIT_QUEUE_HEAD(dispatch_wq);
 struct task_struct *dispatch_thread;
+
+/* Currently running task. */
+/* TODO: Can we track min. period READY task? So we can avoid linear search. */
+struct task *ms_current_task;
 
 void wakeup_task(struct task_struct *task)
 {
@@ -102,10 +105,8 @@ static int dispatch_fn(void *data)
 	while (!kthread_should_stop()) {
 
 		/* sleep until condition becomes true */
-		wait_event_interruptible(
-			dispatch_wq,
-			kthread_should_stop()
-		);
+		set_current_state(TASK_INTERRUPTIBLE);
+		schedule();
 
 		if (kthread_should_stop())
 			break;
