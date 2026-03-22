@@ -68,7 +68,7 @@ static void wakeup_timer_handler(struct timer_list *t)
 
 	tk = container_of(t, struct task, wakeup_timer);
 
-	pr_debug("PID %d. Fire timer at %ul\n", tk->pid, jiffies_to_msecs(tk->last_release));
+	pr_debug("PID %d. Fire timer at %u\n", tk->pid, jiffies_to_msecs(tk->last_release));
 	spin_lock(&processes_lock);
 	tk->state = READY;
 	tk->last_release = jiffies; /* tracks actual last release */
@@ -157,7 +157,10 @@ void yield_task(pid_t pid)
 		if (time_after(next_release, jiffies))
 			mod_timer(&found->wakeup_timer, next_release);
 
-		pr_debug("Putting task %d to sleep...\n", t->pid);
+		/* Wake up dispatching thread. */
+		wake_up_process(dispatch_thread);
+
+		pr_debug("Putting task %d to sleep. State = %d\n", found->pid, found->state);
 		set_current_state(TASK_KILLABLE); /* allow sleep plus reaping if rmmod early */
 		schedule();
 	}

@@ -47,8 +47,10 @@ static void sched_best_task(void)
 	struct task *t;
 
 	spin_lock_bh(&processes_lock);
-	if (list_empty(&processes))
-		goto done;
+	if (list_empty(&processes)) {
+		spin_unlock_bh(&processes_lock);
+		return;
+	}
 
 	/* Need to check if it's in READY state */
 	struct task *best_tk;
@@ -60,6 +62,7 @@ static void sched_best_task(void)
 		} else if (t->state == READY && t->period < best_tk->period)
 			best_tk = t;
 	}
+	spin_unlock_bh(&processes_lock);
 
 	/* Schedule new task if:
 	 *	1) new task has higher priority than current running task.
@@ -68,10 +71,12 @@ static void sched_best_task(void)
 	 */
 	if (best_tk) {
 		if (ms_current_task == NULL) {
+			pr_debug("PID %d: first running task\n", best_tk->pid);
 			wakeup_task(best_tk->linux_task);
 			ms_current_task = best_tk;
 			ms_current_task->state = RUNNING;
 		} else if (ms_current_task != NULL && ms_current_task->state == RUNNING && ms_current_task->period > best_tk->period) {
+			pr_debug("PID %d: RUNNING current task is replaced by another task.\n", best_tk->pid);
 			preempt_task(ms_current_task->linux_task);
 			ms_current_task->state = READY;
 
@@ -79,23 +84,34 @@ static void sched_best_task(void)
 			ms_current_task = best_tk;
 			ms_current_task->state = RUNNING;
 		} else if (ms_current_task != NULL && ms_current_task->state == SLEEPING) {
+			pr_debug("PID %d: current task is SLEEPING.\n", best_tk->pid);
 			preempt_task(ms_current_task->linux_task);
 			/* NOTE: We do not modify the state of prev task. */
 
 			wakeup_task(best_tk->linux_task);
 			ms_current_task = best_tk;
 			ms_current_task->state = RUNNING;
+		} else if (ms_current_task != NULL && best_tk->state == READY) {
+			pr_debug("PID %d: current task is READY.\n", best_tk->pid);
+			wakeup_task(best_tk->linux_task);
+			ms_current_task = best_tk;
+			ms_current_task->state = RUNNING;
+		} else {
+			pr_warn("PID %d: unknown state trasition with READY task.\n", best_tk->pid);
+			if (ms_current_task)
+				pr_warn("Curr task %d, state = %d\n", ms_current_task->pid, ms_current_task->state);
 		}
+		// TODO: RUNNING -> SLEEPING (current task is finished)
 	} else {
 		/* We will still preempt the task, even though there is no new READY task. */
 		if (ms_current_task != NULL && ms_current_task->state == SLEEPING) {
+			pr_debug("PID %d: current task is SLEEPING and no READY task.\n", ms_current_task->pid);
 			preempt_task(ms_current_task->linux_task);
 			ms_current_task = NULL;
+		} else {
+			pr_warn("Unknown state trasition with no READY task.\n");
 		}
 	}
-
-done:
-	spin_unlock_bh(&processes_lock);
 }
 
 static int dispatch_fn(void *data)
