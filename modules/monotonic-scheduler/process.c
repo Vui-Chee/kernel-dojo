@@ -26,7 +26,14 @@ struct task_struct *find_task_by_pid(int nr)
 	struct task_struct *task; /* kernel task */
 
 	rcu_read_lock();
-	task = pid_task(find_vpid(nr), PIDTYPE_PID);
+	task = pid_task(find_vpid(nr), PIDTYPE_PID); 
+	if (task == NULL) {
+		goto done;
+	}
+	/* ref count to prevent kernel from freeing prematurely */
+	task = get_task_struct(task);
+
+done:
 	rcu_read_unlock();
 	return task;
 };
@@ -101,7 +108,6 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 		pr_warn("PID %d is not allowed admission. curr_sum = %u.\n", pid, curr_sum);
 		return;
 	}
-	admission_sum = curr_sum;
 	spin_unlock_bh(&admission_lock);
 
 	struct task *tk;
@@ -116,10 +122,15 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 
 	if (!k_tk) {
 		pr_err("Cannot find task with pid %d.\n", pid);
+		kmem_cache_free(task_cache, tk);
 		return;
 	}
 
-	tk->linux_task = get_task_struct(k_tk); /* ref count to prevent kernel from freeing prematurely */
+	spin_lock_bh(&admission_lock);
+	admission_sum = curr_sum;
+	spin_unlock_bh(&admission_lock);
+
+	tk->linux_task = k_tk;
 	tk->pid = pid;
 	tk->period = period;
 	tk->processing_time = processing_time;
