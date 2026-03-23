@@ -70,35 +70,33 @@ static void sched_best_task(void)
 	 */
 	if (best_tk) { /* always in READY state. */
 		if (ms_current_task == NULL) {
-			pr_debug("PID %d: first running task\n", best_tk->pid);
+			pr_debug("Ready PID %d: first running task\n", best_tk->pid);
+
 			wakeup_task(best_tk->linux_task);
+			best_tk->state = RUNNING;
 			ms_current_task = best_tk;
-			ms_current_task->state = RUNNING;
 		} else if (ms_current_task != NULL && ms_current_task->state == RUNNING && ms_current_task->period > best_tk->period) {
-			pr_debug("PID %d: RUNNING current task is replaced by another task.\n", best_tk->pid);
+			pr_debug("Ready PID %d: RUNNING current task is replaced by another task.\n", best_tk->pid);
 			preempt_task(ms_current_task->linux_task);
 			ms_current_task->state = READY;
 
 			wakeup_task(best_tk->linux_task);
+			best_tk->state = RUNNING;
 			ms_current_task = best_tk;
-			ms_current_task->state = RUNNING;
 		} else if (ms_current_task != NULL && ms_current_task->state == SLEEPING) {
-			pr_debug("PID %d: current task is SLEEPING.\n", best_tk->pid);
+			pr_debug("Ready PID %d: current task is SLEEPING.\n", best_tk->pid);
 			preempt_task(ms_current_task->linux_task);
-			/* NOTE: We do not modify the state of prev task. */
 
 			wakeup_task(best_tk->linux_task);
+			best_tk->state = RUNNING;
 			ms_current_task = best_tk;
-			ms_current_task->state = RUNNING;
 		} else {
 			pr_debug("Best PID %d: no preemption.\n", best_tk->pid);
-			if (ms_current_task)
-				pr_debug("Curr task %d, state = %d\n", ms_current_task->pid, ms_current_task->state);
 		}
 	} else {
 		/* We will still preempt the task, even though there is no new READY task. */
 		if (ms_current_task != NULL && ms_current_task->state == SLEEPING) {
-			pr_debug("Current PID %d is SLEEPING and no READY task.\n", ms_current_task->pid);
+			pr_debug("Current task is SLEEPING and no READY task.\n");
 			preempt_task(ms_current_task->linux_task);
 			ms_current_task = NULL;
 		} else {
