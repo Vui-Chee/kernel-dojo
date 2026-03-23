@@ -31,6 +31,14 @@ struct task_struct *find_task_by_pid(int nr)
 	return task;
 };
 
+void task_free_fn(struct kref *ref)
+{
+	struct task *t = container_of(ref, struct task, refcount);
+
+	put_task_struct(t->linux_task);
+	kmem_cache_free(task_cache, t);
+}
+
 static void task_ctor(void *obj)
 {
 	struct task *t = obj;
@@ -62,7 +70,7 @@ void process_teardown(void)
 		pr_warn("(teardown) PID %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
 		send_sig(SIGKILL, t->linux_task, 1); /* kill the task to release the file */
 		list_del_init(&t->list);
-		kmem_cache_free(task_cache, t);
+		kref_put(&t->refcount, task_free_fn);
 	}
 	kmem_cache_destroy(task_cache);
 	task_cache = NULL; /* prevent dangling pointers */
@@ -117,6 +125,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	tk->processing_time = processing_time;
 	tk->state = SLEEPING;
 	tk->last_release = jiffies;
+	kref_init(&tk->refcount); /* starts at 1, owned by the processes list */
 
 	/* Only setup. Timer does not fire immediately. */
 	timer_setup(&tk->wakeup_timer, wakeup_timer_handler, 0);
@@ -155,8 +164,7 @@ void deregister_task(pid_t pid)
 		int pending = timer_delete_sync(&found->wakeup_timer);
 
 		pr_debug("PID %d. Timer deleted, pending callbacks: %d. Admission sum = %u.\n", found->pid, pending, sum_after);
-		put_task_struct(found->linux_task);
-		kmem_cache_free(task_cache, found);
+		kref_put(&found->refcount, task_free_fn); /* free only when dispatch is done with it */
 
 		/* Schedule other tasks. Otherwise, tasks will be idle. */
 		wake_up_process(dispatch_thread);

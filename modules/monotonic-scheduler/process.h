@@ -2,6 +2,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include <linux/kref.h>
 #include <linux/list.h>
 #include <linux/pid.h>
 #include <linux/sched.h>
@@ -16,6 +17,8 @@ void deregister_task(pid_t pid);
 
 void yield_task(pid_t pid);
 
+void task_free_fn(struct kref *ref);
+
 struct task_struct *find_task_by_pid(int nr);
 
 enum TASK_STATE {
@@ -29,7 +32,8 @@ struct task {
 	struct task_struct *linux_task;
 	/* Wakes the dispatcher thread. */
 	struct timer_list wakeup_timer;
-
+	/* Prevents UAF. */
+	struct kref refcount;
 	/* Current state of the registered task. */
 	enum TASK_STATE state;
 	/* Userspace process pid. */
