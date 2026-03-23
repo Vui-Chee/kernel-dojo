@@ -117,7 +117,7 @@ static void sched_best_task(void)
 	if (best_tk)
 		kref_put(&best_tk->refcount, task_free_fn);
 	if (curr)
-		kref_put(&curr->refcount, task_free_fn); /* task_free_fn never runs here. */
+		kref_put(&curr->refcount, task_free_fn);
 }
 
 static int dispatch_fn(void *data)
