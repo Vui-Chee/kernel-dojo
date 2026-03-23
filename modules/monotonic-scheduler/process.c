@@ -81,7 +81,6 @@ static void wakeup_timer_handler(struct timer_list *t)
 	spin_unlock(&processes_lock);
 
 	wake_up_process(dispatch_thread);
-	pr_debug("PID %d. Timer handler completed\n", tk->pid);
 }
 
 void register_task(pid_t pid, u32 period, u32 processing_time)
@@ -91,7 +90,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 
 	if (curr_sum * 1000 > ADMISSION_CONSTANT) {
 		spin_unlock_bh(&admission_lock);
-		pr_warn("PID %d is not allowed admission.\n", pid);
+		pr_warn("PID %d is not allowed admission. curr_sum = %u.\n", pid, curr_sum);
 		return;
 	}
 	admission_sum = curr_sum;
