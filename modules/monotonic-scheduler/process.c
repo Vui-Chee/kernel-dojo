@@ -109,6 +109,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 		pr_warn("PID %d is not allowed admission. curr_sum = %u.\n", pid, curr_sum);
 		return;
 	}
+	admission_sum = curr_sum;
 	spin_unlock_bh(&admission_lock);
 
 	struct task *tk;
@@ -116,7 +117,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	tk = kmem_cache_alloc(task_cache, GFP_KERNEL);
 	if (!tk) {
 		pr_err("Failed to cache alloc process with pid %d.\n", pid);
-		return;
+		goto out;
 	}
 
 	struct task_struct *k_tk = find_task_by_pid(pid);
@@ -124,12 +125,8 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	if (!k_tk) {
 		pr_err("Cannot find task with pid %d.\n", pid);
 		kmem_cache_free(task_cache, tk);
-		return;
+		goto out;
 	}
-
-	spin_lock_bh(&admission_lock);
-	admission_sum = curr_sum;
-	spin_unlock_bh(&admission_lock);
 
 	tk->linux_task = k_tk;
 	tk->pid = pid;
@@ -146,6 +143,13 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	list_add_tail(&tk->list, &processes);
 	pr_debug("PID %d added to list, count = %ld. Admission sum = %u.\n", pid, list_count_nodes(&processes), curr_sum);
 	spin_unlock_bh(&processes_lock);
+	return;
+
+out:
+	/* Rollback admission_sum. */
+	spin_lock_bh(&admission_lock);
+	admission_sum -= scaled_div(processing_time, period);
+	spin_unlock_bh(&admission_lock);
 }
 
 void deregister_task(pid_t pid)
