@@ -19,6 +19,7 @@ struct kmem_cache *task_cache;
 
 /* Statically init the list. */
 LIST_HEAD(processes);
+DEFINE_SPINLOCK(processes_lock);
 
 /* pid_t is signed int. */
 struct task_struct *find_task_by_pid(int nr)

@@ -49,7 +49,7 @@ struct task {
 };
 
 /* Guards access to tracked processes. */
-static DEFINE_SPINLOCK(processes_lock);
+extern spinlock_t processes_lock;
 
 /* List of processes we track. */
 extern struct list_head processes;
