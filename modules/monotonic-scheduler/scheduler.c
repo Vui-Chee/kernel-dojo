@@ -178,7 +178,7 @@ remove_proc:
 remove_file:
 	remove_proc_entry(PROCFS_FILE, dir);
 remove_dir:
-	remove_proc_entry(PROCFS_FILE, dir);
+	remove_proc_entry(PROC_TIME_DIR, NULL);
 failed_dir:
 
 	return errno;
