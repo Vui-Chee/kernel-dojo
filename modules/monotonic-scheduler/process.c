@@ -93,7 +93,6 @@ static void wakeup_timer_handler(struct timer_list *t)
 	pr_debug("PID %d. Fire timer at %u\n", tk->pid, jiffies_to_msecs(tk->last_release));
 	spin_lock(&processes_lock);
 	tk->state = READY;
-	tk->last_release = jiffies; /* tracks actual last release */
 	spin_unlock(&processes_lock);
 
 	wake_up_process(dispatch_thread);
@@ -205,8 +204,10 @@ void yield_task(pid_t pid)
 		unsigned long next_release = found->last_release + msecs_to_jiffies(found->period);
 
 		/* Arm the timer if next release exceeds current time. */
-		if (time_after(next_release, jiffies))
+		if (time_after(next_release, jiffies)) {
+			found->last_release = next_release;
 			mod_timer(&found->wakeup_timer, next_release);
+		}
 
 		wake_up_process(dispatch_thread);
 
