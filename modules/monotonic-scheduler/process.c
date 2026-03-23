@@ -8,6 +8,12 @@
 
 #include "process.h"
 #include "scheduler.h"
+#include "math.h"
+
+#define ADMISSION_CONSTANT (693 << FIXED_SHIFT)
+
+spinlock_t admission_lock; /* locks admission_sum during register/de-register */
+u32 admission_sum;
 
 struct kmem_cache *task_cache;
 
@@ -80,6 +86,17 @@ static void wakeup_timer_handler(struct timer_list *t)
 
 void register_task(pid_t pid, u32 period, u32 processing_time)
 {
+	spin_lock_bh(&admission_lock);
+	u32 curr_sum = admission_sum + scaled_div(processing_time, period);
+
+	if (curr_sum * 1000 > ADMISSION_CONSTANT) {
+		spin_unlock_bh(&admission_lock);
+		pr_warn("PID %d is not allowed admission.\n", pid);
+		return;
+	}
+	admission_sum = curr_sum;
+	spin_unlock_bh(&admission_lock);
+
 	struct task *tk;
 
 	tk = kmem_cache_alloc(task_cache, GFP_KERNEL);
@@ -107,7 +124,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 
 	spin_lock_bh(&processes_lock);
 	list_add_tail(&tk->list, &processes);
-	pr_debug("Add item to list, count = %ld\n", list_count_nodes(&processes));
+	pr_debug("PID %d added to list, count = %ld. Admission sum = %u.\n", pid, list_count_nodes(&processes), curr_sum);
 	spin_unlock_bh(&processes_lock);
 }
 
@@ -115,12 +132,18 @@ void deregister_task(pid_t pid)
 {
 	struct task *t, *tmp;
 	struct task *found = NULL;
+	u32 sum_after = 0;
 
 	spin_lock_bh(&processes_lock);
 	list_for_each_entry_safe(t, tmp, &processes, list) {
 		if (t->pid == pid) {
 			list_del(&t->list);
 			found = t;
+
+			spin_lock_bh(&admission_lock);
+			admission_sum -= scaled_div(found->processing_time, found->period);
+			sum_after = admission_sum;
+			spin_unlock_bh(&admission_lock);
 
 			if (found == ms_current_task)
 				ms_current_task = NULL;
@@ -132,7 +155,7 @@ void deregister_task(pid_t pid)
 	if (found) {
 		int pending = timer_delete_sync(&found->wakeup_timer);
 
-		pr_debug("PID %d. Timer deleted, pending callbacks: %d\n", found->pid, pending);
+		pr_debug("PID %d. Timer deleted, pending callbacks: %d. Admission sum = %u.\n", found->pid, pending, sum_after);
 		put_task_struct(found->linux_task);
 		kmem_cache_free(task_cache, found);
 
@@ -162,7 +185,6 @@ void yield_task(pid_t pid)
 		if (time_after(next_release, jiffies))
 			mod_timer(&found->wakeup_timer, next_release);
 
-		/* Wake up dispatching thread. */
 		wake_up_process(dispatch_thread);
 
 		pr_debug("Putting task %d to sleep. State = %d\n", found->pid, found->state);
