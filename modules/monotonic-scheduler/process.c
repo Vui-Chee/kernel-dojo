@@ -26,10 +26,10 @@ struct task_struct *find_task_by_pid(int nr)
 	struct task_struct *task; /* kernel task */
 
 	rcu_read_lock();
-	task = pid_task(find_vpid(nr), PIDTYPE_PID); 
-	if (task == NULL) {
+	task = pid_task(find_vpid(nr), PIDTYPE_PID);
+	if (task == NULL)
 		goto done;
-	}
+
 	/* ref count to prevent kernel from freeing prematurely */
 	task = get_task_struct(task);
 
