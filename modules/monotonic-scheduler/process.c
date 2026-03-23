@@ -12,7 +12,7 @@
 
 #define ADMISSION_CONSTANT (693 << FIXED_SHIFT)
 
-spinlock_t admission_lock; /* locks admission_sum during register/de-register */
+DEFINE_SPINLOCK(admission_lock); /* locks admission_sum during register/de-register */
 u32 admission_sum;
 
 struct kmem_cache *task_cache;
