@@ -20,7 +20,7 @@ struct task *ms_current_task;
 /* Wakes and sets new current task as RUNNING. */
 static void wakeup_task(struct task *tk)
 {
-	struct sched_attr attr;
+	struct sched_attr attr = {};
 
 	wake_up_process(tk->linux_task);
 	attr.sched_policy = SCHED_FIFO;
@@ -34,7 +34,7 @@ static void wakeup_task(struct task *tk)
 /* Only sleeps the task w/o state changes. */
 static void preempt_task(struct task *tk)
 {
-	struct sched_attr attr;
+	struct sched_attr attr = {};
 
 	attr.sched_policy = SCHED_NORMAL;
 	attr.sched_priority = 0;
@@ -70,6 +70,17 @@ static void sched_best_task(void)
 	curr = ms_current_task;
 	if (curr)
 		kref_get(&curr->refcount);
+	if (best_tk)
+		kref_get(&best_tk->refcount);
+
+	/* Snapshot state for comparison after unlock. */
+	enum TASK_STATE curr_state = curr ? curr->state : SLEEPING;
+
+	/* Perform state changes inside lock. */
+	if (curr && best_tk && curr->state == RUNNING && curr->period > best_tk->period)
+		curr->state = READY;
+	if (!best_tk && curr && curr->state == SLEEPING)
+		ms_current_task = NULL;
 
 	spin_unlock_bh(&processes_lock);
 
@@ -83,12 +94,11 @@ static void sched_best_task(void)
 			pr_debug("Ready PID %d: first running task\n", best_tk->pid);
 
 			wakeup_task(best_tk);
-		} else if (curr->state == RUNNING && curr->period > best_tk->period) {
+		} else if (curr_state == RUNNING && curr->period > best_tk->period) {
 			pr_debug("Ready PID %d: RUNNING current task is replaced by another task.\n", best_tk->pid);
 			preempt_task(curr);
-			curr->state = READY;
 			wakeup_task(best_tk);
-		} else if (curr->state == SLEEPING) {
+		} else if (curr_state == SLEEPING) {
 			pr_debug("Ready PID %d: current task is SLEEPING.\n", best_tk->pid);
 			preempt_task(curr);
 			wakeup_task(best_tk);
@@ -97,15 +107,16 @@ static void sched_best_task(void)
 		}
 	} else {
 		/* We will still preempt the task, even though there is no new READY task. */
-		if (curr && curr->state == SLEEPING) {
+		if (curr && curr_state == SLEEPING) {
 			pr_debug("Current task is SLEEPING and no READY task.\n");
 			preempt_task(curr);
-			ms_current_task = NULL;
 		} else {
 			pr_debug("Unknown state trasition with no READY task.\n");
 		}
 	}
 
+	if (best_tk)
+		kref_put(&best_tk->refcount, task_free_fn);
 	if (curr)
 		kref_put(&curr->refcount, task_free_fn); /* task_free_fn never runs here. */
 }
