@@ -1,5 +1,7 @@
 # Kernel Dojo
 
+<p align="center"><img src="assets/kungfu-penguin.png" height="300"></p>
+
 A hands-on environment for learning Linux kernel development. Build, run, and hack on the kernel inside QEMU — no risk to your host system.
 
 ## What's included
