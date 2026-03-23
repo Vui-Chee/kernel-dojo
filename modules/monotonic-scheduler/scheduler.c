@@ -4,7 +4,6 @@
 #include <linux/init.h>
 #include <linux/proc_fs.h>
 #include <linux/kthread.h>
-#include <linux/delay.h>
 
 #include "file.h"
 #include "process.h"
@@ -152,10 +151,7 @@ static int __init init_scheduler(void)
 		goto failed_dir;
 	}
 
-	struct proc_dir_entry *our_proc_file;
-
-	our_proc_file = proc_create(PROCFS_FILE, 0644, dir, &my_fops);
-	if (!our_proc_file) {
+	if (!proc_create(PROCFS_FILE, 0644, dir, &my_fops)) {
 		errno = -ENOMEM;
 		goto remove_dir;
 	}

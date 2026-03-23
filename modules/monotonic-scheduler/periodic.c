@@ -70,14 +70,17 @@ bool in_fs(pid_t pid)
 		int got = sscanf(line, "%d: %u, %u", &p_pid, &period, &processing_time);
 
 		if (got == 3) {
-			if (pid == p_pid)
+			if (pid == p_pid) {
+				fclose(fp);
 				return true;
+			}
 		} else {
 			fprintf(stderr, "sscanf error, expected 3 values, got %d\n", got);
 			break;
 		}
 	}
 
+	fclose(fp);
 	return false;
 }
 
@@ -100,11 +103,6 @@ void job(unsigned int processing_time) /* ms */
 		if (elapsed >= processing_time)
 			break;
 	}
-}
-
-uint64_t in_ns(struct timespec *ts)
-{
-	return (uint64_t)ts->tv_sec * 1000000000LL + ts->tv_nsec;
 }
 
 int main(void)
