@@ -111,13 +111,13 @@ int main(void)
 {
 	srand(time(NULL));
 
-	int iterations = (int)rand() % 10001 + 10000;
+	int iterations = (int)rand() % 101 + 100;
 
 	pid_t pid = getpid();
 	/* 100 to 200 (ms) */
 	unsigned int period = (unsigned int)rand() % 101 + 100;
 	/* 10 to 20 (ms per job) */
-	unsigned int p_time = (unsigned int)rand() % 11 + 10;
+	unsigned int p_time = (unsigned int)rand() % 21 + 10;
 
 	printf("INFO: %d, %u, %u\n", pid, period, p_time);
 
@@ -128,25 +128,12 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 
-	struct timespec ts;
-
 	/* Kernel puts process to sleep. */
 	yield_job(pid);
 
 	while (iterations > 0) {
-		clock_gettime(CLOCK_MONOTONIC, &ts);
-		uint64_t wakeup_ns = in_ns(&ts);
-
 		job(p_time); /* p_time < period */
-
-		clock_gettime(CLOCK_MONOTONIC, &ts);
-		uint64_t processing_ns = in_ns(&ts);
-		uint64_t time_taken = processing_ns - wakeup_ns;
-
-		if (iterations % 1000000000)
-			printf("%d: time taken(ms) = %lu\n", iterations, time_taken / 1000000);
 		iterations--;
-
 		/* Go back to sleep. */
 		yield_job(pid);
 	}
