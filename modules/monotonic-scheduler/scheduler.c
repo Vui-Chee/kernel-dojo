@@ -17,23 +17,28 @@ struct task_struct *dispatch_thread;
 /* Currently running task. */
 struct task *ms_current_task;
 
-void wakeup_task(struct task_struct *task)
+/* Wakes and sets new current task as RUNNING. */
+static void wakeup_task(struct task *tk)
 {
 	struct sched_attr attr;
 
-	wake_up_process(task);
+	wake_up_process(tk->linux_task);
 	attr.sched_policy = SCHED_FIFO;
 	attr.sched_priority = 99;
-	sched_setattr_nocheck(task, &attr);
+	sched_setattr_nocheck(tk->linux_task, &attr);
+
+	tk->state = RUNNING;
+	ms_current_task = tk;
 }
 
-void preempt_task(struct task_struct *task)
+/* Only sleeps the task w/o state changes. */
+static void preempt_task(struct task *tk)
 {
 	struct sched_attr attr;
 
 	attr.sched_policy = SCHED_NORMAL;
 	attr.sched_priority = 0;
-	sched_setattr_nocheck(task, &attr);
+	sched_setattr_nocheck(tk->linux_task, &attr);
 }
 
 /**
@@ -77,24 +82,16 @@ static void sched_best_task(void)
 		if (!curr) {
 			pr_debug("Ready PID %d: first running task\n", best_tk->pid);
 
-			wakeup_task(best_tk->linux_task);
-			best_tk->state = RUNNING;
-			ms_current_task = best_tk;
+			wakeup_task(best_tk);
 		} else if (curr->state == RUNNING && curr->period > best_tk->period) {
 			pr_debug("Ready PID %d: RUNNING current task is replaced by another task.\n", best_tk->pid);
-			preempt_task(curr->linux_task);
+			preempt_task(curr);
 			curr->state = READY;
-
-			wakeup_task(best_tk->linux_task);
-			best_tk->state = RUNNING;
-			ms_current_task = best_tk;
+			wakeup_task(best_tk);
 		} else if (curr->state == SLEEPING) {
 			pr_debug("Ready PID %d: current task is SLEEPING.\n", best_tk->pid);
-			preempt_task(curr->linux_task);
-
-			wakeup_task(best_tk->linux_task);
-			best_tk->state = RUNNING;
-			ms_current_task = best_tk;
+			preempt_task(curr);
+			wakeup_task(best_tk);
 		} else {
 			pr_debug("Best PID %d: no preemption.\n", best_tk->pid);
 		}
@@ -102,7 +99,7 @@ static void sched_best_task(void)
 		/* We will still preempt the task, even though there is no new READY task. */
 		if (curr && curr->state == SLEEPING) {
 			pr_debug("Current task is SLEEPING and no READY task.\n");
-			preempt_task(curr->linux_task);
+			preempt_task(curr);
 			ms_current_task = NULL;
 		} else {
 			pr_debug("Unknown state trasition with no READY task.\n");

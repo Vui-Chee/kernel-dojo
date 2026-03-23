@@ -11,8 +11,4 @@ extern struct task *ms_current_task;
 
 extern struct task_struct *dispatch_thread;
 
-void wakeup_task(struct task_struct *task);
-
-void preempt_task(struct task_struct *task);
-
 #endif
