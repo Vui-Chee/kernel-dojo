@@ -144,32 +144,44 @@ static int dispatch_fn(void *data)
 
 static int __init init_scheduler(void)
 {
-	pr_debug("Init scheduler\n");
+	int errno;
+
 	dir = proc_mkdir(PROC_TIME_DIR, NULL);
 	if (!dir) {
-		pr_err("Could not create %s\n", PROC_TIME_DIR);
-		return -ENOMEM;
+		errno = -ENOMEM;
+		goto failed_dir;
 	}
 
 	struct proc_dir_entry *our_proc_file;
 
 	our_proc_file = proc_create(PROCFS_FILE, 0644, dir, &my_fops);
-	if (!our_proc_file)
-		return -ENOMEM;
-
-	int errno = process_init();
-
-	if (errno != 0) {
-		pr_err("Error init process. Errno = %d\n", errno);
-		return errno;
+	if (!our_proc_file) {
+		errno = -ENOMEM;
+		goto remove_dir;
 	}
 
+	errno = process_init();
+	if (errno != 0)
+		goto remove_file;
+
 	dispatch_thread = kthread_run(dispatch_fn, NULL, "dispatcher");
-	if (IS_ERR(dispatch_thread))
-		return PTR_ERR(dispatch_thread);
+	if (IS_ERR(dispatch_thread)) {
+		errno = PTR_ERR(dispatch_thread);
+		goto remove_proc;
+	}
 
 	pr_debug("Module initialized success.\n");
 	return 0;
+
+remove_proc:
+	process_teardown();
+remove_file:
+	remove_proc_entry(PROCFS_FILE, dir);
+remove_dir:
+	remove_proc_entry(PROCFS_FILE, dir);
+failed_dir:
+
+	return errno;
 }
 
 static void __exit exit_scheduler(void)
@@ -181,7 +193,6 @@ static void __exit exit_scheduler(void)
 
 	process_teardown();
 	pr_warn("Finished process teardown\n");
-
 	remove_proc_entry(PROCFS_FILE, dir);
 	pr_warn("Removed file %s\n", PROCFS_FILE);
 	remove_proc_entry(PROC_TIME_DIR, NULL);
