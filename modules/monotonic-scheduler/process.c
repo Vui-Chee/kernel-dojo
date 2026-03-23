@@ -102,7 +102,7 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 	tk->state = SLEEPING;
 	tk->last_release = jiffies;
 
-	/* Fire timer period(ms) from now. */
+	/* Only setup. Timer does not fire immediately. */
 	timer_setup(&tk->wakeup_timer, wakeup_timer_handler, 0);
 
 	spin_lock_bh(&processes_lock);
