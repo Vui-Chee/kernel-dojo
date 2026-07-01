@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 #include "stdio.h"
-#include <unistd.h>		// Required for getpid()
-#include <stdlib.h>		// Required for system()
-#include <time.h>		// Required for time()
+#include <unistd.h> // Required for getpid()
+#include <stdlib.h> // Required for system()
+#include <time.h> // Required for time()
 
 int main(void)
 {

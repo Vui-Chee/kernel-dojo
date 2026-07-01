@@ -25,7 +25,7 @@ ssize_t on_proc_read(struct file *file, char __user *ubuf, size_t count,
 		     loff_t *ppos)
 {
 	struct process_time_info *entry;
-	int buf_len = 32;	// enough for one pid and newline
+	int buf_len = 32; // enough for one pid and newline
 	char pid_str[buf_len];
 	int total_len = 0;
 	int len = 0;
@@ -33,7 +33,8 @@ ssize_t on_proc_read(struct file *file, char __user *ubuf, size_t count,
 
 	mutex_lock(&ll_mutex);
 	list_for_each_entry(entry, &ll->list, list) {
-		cpu_time_ms = jiffies_to_msecs(nsecs_to_jiffies(entry->cpu_time));
+		cpu_time_ms =
+			jiffies_to_msecs(nsecs_to_jiffies(entry->cpu_time));
 		len = scnprintf(pid_str, buf_len, "%d: %llu\n", entry->pid,
 				cpu_time_ms);
 		if (copy_to_user(ubuf, pid_str, len))
@@ -48,11 +49,11 @@ ssize_t on_proc_read(struct file *file, char __user *ubuf, size_t count,
 		return 0;
 
 	*ppos += total_len;
-	return total_len;	// return number of bytes read
+	return total_len; // return number of bytes read
 }
 
-ssize_t on_proc_write(struct file *file, const char __user *ubuf,
-		      size_t count, loff_t *ppos)
+ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
+		      loff_t *ppos)
 {
 	// Prevent user from flooding kernel with large writes.
 	if (count > PAGE_SIZE)
