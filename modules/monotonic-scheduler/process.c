@@ -12,7 +12,8 @@
 
 #define ADMISSION_CONSTANT (693 << FIXED_SHIFT)
 
-DEFINE_SPINLOCK(admission_lock); /* locks admission_sum during register/de-register */
+DEFINE_SPINLOCK(
+	admission_lock); /* locks admission_sum during register/de-register */
 u32 admission_sum;
 
 struct kmem_cache *task_cache;
@@ -56,12 +57,11 @@ static void task_ctor(void *obj)
 
 int process_init(void)
 {
-	task_cache = kmem_cache_create(
-		"processes_task_cache",   /* cache name */
-		sizeof(struct task),      /* object size */
-		0,                        /* alignment (0 = default) */
-		SLAB_HWCACHE_ALIGN,       /* flags */
-		task_ctor                 /* constructor */
+	task_cache = kmem_cache_create("processes_task_cache", /* cache name */
+				       sizeof(struct task), /* object size */
+				       0, /* alignment (0 = default) */
+				       SLAB_HWCACHE_ALIGN, /* flags */
+				       task_ctor /* constructor */
 	);
 	if (!task_cache)
 		return -ENOMEM;
@@ -75,8 +75,10 @@ void process_teardown(void)
 	list_for_each_entry_safe(t, tmp, &processes, list) {
 		int pending = timer_delete_sync(&t->wakeup_timer);
 
-		pr_warn("(teardown) PID %d. Timer deleted, pending callbacks: %d\n", t->pid, pending);
-		send_sig(SIGKILL, t->linux_task, 1); /* kill the task to release the file */
+		pr_warn("(teardown) PID %d. Timer deleted, pending callbacks: %d\n",
+			t->pid, pending);
+		send_sig(SIGKILL, t->linux_task,
+			 1); /* kill the task to release the file */
 		list_del_init(&t->list);
 		kref_put(&t->refcount, task_free_fn);
 	}
@@ -90,7 +92,8 @@ static void wakeup_timer_handler(struct timer_list *t)
 
 	tk = container_of(t, struct task, wakeup_timer);
 
-	pr_debug("PID %d. Fire timer at %u\n", tk->pid, jiffies_to_msecs(tk->last_release));
+	pr_debug("PID %d. Fire timer at %u\n", tk->pid,
+		 jiffies_to_msecs(tk->last_release));
 	spin_lock(&processes_lock);
 	tk->state = READY;
 	spin_unlock(&processes_lock);
@@ -105,7 +108,8 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 
 	if (curr_sum * 1000 > ADMISSION_CONSTANT) {
 		spin_unlock_bh(&admission_lock);
-		pr_warn("PID %d is not allowed admission. curr_sum = %u.\n", pid, curr_sum);
+		pr_warn("PID %d is not allowed admission. curr_sum = %u.\n",
+			pid, curr_sum);
 		return;
 	}
 	admission_sum = curr_sum;
@@ -140,7 +144,8 @@ void register_task(pid_t pid, u32 period, u32 processing_time)
 
 	spin_lock_bh(&processes_lock);
 	list_add_tail(&tk->list, &processes);
-	pr_debug("PID %d added to list, count = %ld. Admission sum = %u.\n", pid, list_count_nodes(&processes), curr_sum);
+	pr_debug("PID %d added to list, count = %ld. Admission sum = %u.\n",
+		 pid, list_count_nodes(&processes), curr_sum);
 	spin_unlock_bh(&processes_lock);
 	return;
 
@@ -164,7 +169,8 @@ void deregister_task(pid_t pid)
 			found = t;
 
 			spin_lock_bh(&admission_lock);
-			admission_sum -= scaled_div(found->processing_time, found->period);
+			admission_sum -= scaled_div(found->processing_time,
+						    found->period);
 			sum_after = admission_sum;
 			spin_unlock_bh(&admission_lock);
 
@@ -178,8 +184,12 @@ void deregister_task(pid_t pid)
 	if (found) {
 		int pending = timer_delete_sync(&found->wakeup_timer);
 
-		pr_debug("PID %d. Timer deleted, pending callbacks: %d. Admission sum = %u.\n", found->pid, pending, sum_after);
-		kref_put(&found->refcount, task_free_fn); /* free only when dispatch is done with it */
+		pr_debug(
+			"PID %d. Timer deleted, pending callbacks: %d. Admission sum = %u.\n",
+			found->pid, pending, sum_after);
+		kref_put(
+			&found->refcount,
+			task_free_fn); /* free only when dispatch is done with it */
 
 		/* Schedule other tasks. Otherwise, tasks will be idle. */
 		wake_up_process(dispatch_thread);
@@ -201,7 +211,8 @@ void yield_task(pid_t pid)
 	spin_unlock_bh(&processes_lock);
 
 	if (found) {
-		unsigned long next_release = found->last_release + msecs_to_jiffies(found->period);
+		unsigned long next_release =
+			found->last_release + msecs_to_jiffies(found->period);
 
 		/* Arm the timer if next release exceeds current time. */
 		if (time_after(next_release, jiffies)) {
@@ -211,8 +222,10 @@ void yield_task(pid_t pid)
 
 		wake_up_process(dispatch_thread);
 
-		pr_debug("Putting task %d to sleep. State = %d\n", found->pid, found->state);
-		set_current_state(TASK_KILLABLE); /* allow sleep plus reaping if rmmod early */
+		pr_debug("Putting task %d to sleep. State = %d\n", found->pid,
+			 found->state);
+		set_current_state(
+			TASK_KILLABLE); /* allow sleep plus reaping if rmmod early */
 		schedule();
 	}
 }

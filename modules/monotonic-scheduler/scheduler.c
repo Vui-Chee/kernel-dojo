@@ -76,7 +76,8 @@ static void sched_best_task(void)
 	enum TASK_STATE curr_state = curr ? curr->state : SLEEPING;
 
 	/* Perform state changes inside lock. */
-	if (curr && best_tk && curr->state == RUNNING && curr->period > best_tk->period)
+	if (curr && best_tk && curr->state == RUNNING &&
+	    curr->period > best_tk->period)
 		curr->state = READY;
 	if (!best_tk && curr && curr->state == SLEEPING)
 		ms_current_task = NULL;
@@ -90,15 +91,20 @@ static void sched_best_task(void)
 	 */
 	if (best_tk) { /* always in READY state. */
 		if (!curr) {
-			pr_debug("Ready PID %d: first running task\n", best_tk->pid);
+			pr_debug("Ready PID %d: first running task\n",
+				 best_tk->pid);
 
 			wakeup_task(best_tk);
-		} else if (curr_state == RUNNING && curr->period > best_tk->period) {
-			pr_debug("Ready PID %d: RUNNING current task is replaced by another task.\n", best_tk->pid);
+		} else if (curr_state == RUNNING &&
+			   curr->period > best_tk->period) {
+			pr_debug(
+				"Ready PID %d: RUNNING current task is replaced by another task.\n",
+				best_tk->pid);
 			preempt_task(curr);
 			wakeup_task(best_tk);
 		} else if (curr_state == SLEEPING) {
-			pr_debug("Ready PID %d: current task is SLEEPING.\n", best_tk->pid);
+			pr_debug("Ready PID %d: current task is SLEEPING.\n",
+				 best_tk->pid);
 			preempt_task(curr);
 			wakeup_task(best_tk);
 		} else {
@@ -107,10 +113,13 @@ static void sched_best_task(void)
 	} else {
 		/* We will still preempt the task, even though there is no new READY task. */
 		if (curr && curr_state == SLEEPING) {
-			pr_debug("Current task is SLEEPING and no READY task.\n");
+			pr_debug(
+				"Current task is SLEEPING and no READY task.\n");
 			preempt_task(curr);
 		} else {
-			pr_debug("Unknown state trasition (%d) with no READY task.\n", curr_state);
+			pr_debug(
+				"Unknown state trasition (%d) with no READY task.\n",
+				curr_state);
 		}
 	}
 
@@ -125,7 +134,6 @@ static int dispatch_fn(void *data)
 	pr_debug("Dispatch thread started\n");
 
 	while (!kthread_should_stop()) {
-
 		/* sleep until condition becomes true */
 		set_current_state(TASK_INTERRUPTIBLE);
 		schedule();

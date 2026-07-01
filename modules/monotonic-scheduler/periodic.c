@@ -67,7 +67,8 @@ bool in_fs(pid_t pid)
 	while (fgets(line, sizeof(line), fp) != NULL) {
 		pid_t p_pid;
 		unsigned int period, processing_time;
-		int got = sscanf(line, "%d: %u, %u", &p_pid, &period, &processing_time);
+		int got = sscanf(line, "%d: %u, %u", &p_pid, &period,
+				 &processing_time);
 
 		if (got == 3) {
 			if (pid == p_pid) {
@@ -75,7 +76,9 @@ bool in_fs(pid_t pid)
 				return true;
 			}
 		} else {
-			fprintf(stderr, "sscanf error, expected 3 values, got %d\n", got);
+			fprintf(stderr,
+				"sscanf error, expected 3 values, got %d\n",
+				got);
 			break;
 		}
 	}
@@ -98,7 +101,7 @@ void job(unsigned int processing_time) /* ms */
 		clock_gettime(CLOCK_MONOTONIC, &now);
 
 		long elapsed = (now.tv_sec - start.tv_sec) * 1000 +
-			(now.tv_nsec - start.tv_nsec) / 1000000;
+			       (now.tv_nsec - start.tv_nsec) / 1000000;
 
 		if (elapsed >= processing_time)
 			break;

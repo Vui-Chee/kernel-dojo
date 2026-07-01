@@ -30,19 +30,20 @@ ssize_t on_proc_read(struct file *file, char __user *ubuf, size_t count,
 	spin_lock_bh(&processes_lock);
 	list_for_each_entry(t, &processes, list) {
 		total_len += scnprintf(kbuf + total_len, PAGE_SIZE - total_len,
-			"%d: %u, %u\n", t->pid,
-			t->period, t->processing_time);
+				       "%d: %u, %u\n", t->pid, t->period,
+				       t->processing_time);
 	}
 	spin_unlock_bh(&processes_lock);
 
-	ssize_t ret = simple_read_from_buffer(ubuf, count, ppos, kbuf, total_len);
+	ssize_t ret =
+		simple_read_from_buffer(ubuf, count, ppos, kbuf, total_len);
 
 	kfree(kbuf);
 	return ret;
 }
 
-ssize_t on_proc_write(struct file *file, const char __user *ubuf,
-		      size_t count, loff_t *ppos)
+ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
+		      loff_t *ppos)
 {
 	if (*ppos != 0)
 		return -EINVAL;
@@ -62,13 +63,16 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 	case 'R': {
 		u32 period;
 		u32 processing_time;
-		int ret = sscanf(kbuf, "%c,%d,%u,%u", &op, &pid, &period, &processing_time);
+		int ret = sscanf(kbuf, "%c,%d,%u,%u", &op, &pid, &period,
+				 &processing_time);
 
 		if (ret != 4) {
-			pr_err("Register operation accepts 4 values. Got %d values.\n", ret);
+			pr_err("Register operation accepts 4 values. Got %d values.\n",
+			       ret);
 			break;
 		}
-		pr_debug("Registering process: %c,%d,%u,%u\n", op, pid, period, processing_time);
+		pr_debug("Registering process: %c,%d,%u,%u\n", op, pid, period,
+			 processing_time);
 		register_task(pid, period, processing_time);
 		break;
 	}
@@ -76,7 +80,8 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 		int ret = sscanf(kbuf, "%c,%d", &op, &pid);
 
 		if (ret != 2) {
-			pr_err("De-register operation accepts 2 values. Got %d values.\n", ret);
+			pr_err("De-register operation accepts 2 values. Got %d values.\n",
+			       ret);
 			break;
 		}
 		pr_debug("De-registering process: %c,%d\n", op, pid);
@@ -87,7 +92,8 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf,
 		int ret = sscanf(kbuf, "%c,%d", &op, &pid);
 
 		if (ret != 2) {
-			pr_err("Yield operation accepts 2 values. Got %d values.\n", ret);
+			pr_err("Yield operation accepts 2 values. Got %d values.\n",
+			       ret);
 			break;
 		}
 		pr_debug("Yield: %c,%d\n", op, pid);
