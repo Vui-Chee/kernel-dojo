@@ -96,7 +96,7 @@ cmod:
 
 .PHONY: fmt
 fmt:
-	clang-format -style=file:$(KERNEL_DIR)/.clang-format -i $(FILTERED_SRCS)
+	clang-format -style=file:$(KERNEL_DIR)/.clang-format -i --verbose $(FILTERED_SRCS)
 
 .PHONY: lint
 lint:
