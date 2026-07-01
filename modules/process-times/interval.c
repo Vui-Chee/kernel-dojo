@@ -57,7 +57,8 @@ void proc_interval_init(unsigned int interval)
 	}
 
 	timer_setup(&proc_timer, proc_timer_callback, 0);
-	proc_timer_callback(&proc_timer);	// start timer for the first time
+	// Schedule for 5 seconds from now
+	mod_timer(&proc_timer, jiffies + msecs_to_jiffies(interval_ms));
 }
 
 void clear_proc_interval(void)
