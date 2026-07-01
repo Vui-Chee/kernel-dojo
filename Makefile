@@ -15,13 +15,12 @@ KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
 M_DIR ?= modules/*
 M_DIR := $(realpath $(M_DIR))
 
-# Apply lint/fmt only to these files.
+# Allow commands to operate only these files.
 SRCS  := $(sort $(foreach dir,$(M_DIR),$(wildcard $(dir)/*.c $(dir)/*.h)))
 FILTERED_SRCS := $(filter-out %.mod.c, $(SRCS))
 
 export KROOT
 
-# sudo apt install clang lld llvm
 ifeq ($(shell which apt 2>/dev/null), /usr/bin/apt)
 	INSTALL_CMD = sudo apt update && sudo apt install -y
 	PACKAGES = build-essential libncurses-dev bison flex libssl-dev libelf-dev qemu-system-x86 cpio libdw-dev
