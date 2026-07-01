@@ -110,7 +110,7 @@ static void sched_best_task(void)
 			pr_debug("Current task is SLEEPING and no READY task.\n");
 			preempt_task(curr);
 		} else {
-			pr_debug("Unknown state trasition with no READY task.\n");
+			pr_debug("Unknown state trasition (%d) with no READY task.\n", curr_state);
 		}
 	}
 
@@ -165,6 +165,14 @@ static int __init init_scheduler(void)
 		errno = PTR_ERR(dispatch_thread);
 		goto remove_proc;
 	}
+
+	/* Set dispatcher thread to high priority, otherwise won't preempt curr task. */
+	struct sched_attr attr = {};
+
+	attr.sched_policy = SCHED_FIFO;
+	attr.sched_priority = 99;
+
+	sched_setattr_nocheck(dispatch_thread, &attr);
 
 	pr_debug("Module initialized success.\n");
 	return 0;
