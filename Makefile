@@ -96,7 +96,7 @@ cmod:
 
 .PHONY: fmt
 fmt:
-	VERSION_CONTROL=none $(KERNEL_DIR)/scripts/Lindent $(FILTERED_SRCS)
+	clang-format -style=file:$(KERNEL_DIR)/.clang-format -i $(FILTERED_SRCS)
 
 .PHONY: lint
 lint:
