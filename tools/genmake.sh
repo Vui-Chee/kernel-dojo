@@ -47,13 +47,14 @@ for names in *.c ; do
 if [[ $(grep NOMAKE $names) ]] || [[ $(grep vermagic $names) ]] || [[ $names == *.mod.c ]] ; then
     echo "$names is being skipped, it is not a module or program"
     else
-    if [[ $(grep '<linux/' $names) ]] ; then
+    # User programs defines main(); anything else is part of the kernel module
+    if grep -Eq '\bmain[[:space:]]*\(' $names ; then
+        U_X=$U_X" $(basename $names .c)"
+        U_S=$U_S" $names"
+    else
         FILENAME_DOTO=$(basename $names .c).o
         OBJS=$OBJS" $FILENAME_DOTO"
         K_S=$K_S" $names"
-    else
-        U_X=$U_X" $(basename $names .c)"
-        U_S=$U_S" $names"
     fi
 fi
 done
