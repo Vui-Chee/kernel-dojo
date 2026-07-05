@@ -11,8 +11,6 @@ U_X=""    # list of userland programs (executables)
 ALL=""    # list of all targets
 DEBUG="${DEBUG:-0}" # enable debug logs (via env) in k mod
 
-echo "here: $DEBUG"
-
 CFLAGS_U_X="-O2 -Wall -pthread"    # compile flags for user programs
 
 # set the default kernel source to the running one; otherwise take from
