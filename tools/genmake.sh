@@ -9,6 +9,9 @@ K_S=""    # list of kernel modules (.c files)
 U_S=""    # list of userland programs (.c files)
 U_X=""    # list of userland programs (executables)
 ALL=""    # list of all targets
+DEBUG="${DEBUG:-0}" # enable debug logs (via env) in k mod
+
+echo "here: $DEBUG"
 
 CFLAGS_U_X="-O2 -Wall -pthread"    # compile flags for user programs
 
@@ -93,6 +96,9 @@ if [[ -n $K_S ]] ; then
         echo -e "\n${MOD_NAME}-y :=$OBJS\n" >> Makefile
     else
         echo -e "\nobj-m += $OBJS" >> Makefile
+    fi
+    if [[ "$DEBUG" = true ]] ; then
+    	echo -e "ccflags-y += -DDEBUG" >> Makefile
     fi
     echo -e "\nexport KROOT=$KROOT" >> Makefile
     if [[ -n $ARCH ]] ; then
