@@ -4,6 +4,7 @@
 #include <linux/proc_fs.h>
 
 #include "file.h"
+#include "process.h"
 
 struct proc_dir_entry *dir;
 
