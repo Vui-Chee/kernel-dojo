@@ -22,11 +22,13 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 	pid_t pid;
 	char op = kbuf[0];
 
+	pr_debug("kbuf = %s, count = %zu\n", kbuf, count);
+
 	switch (op) {
 	case 'R': {
-		int ret = kstrtoint(kbuf, 10, &pid);
+		int ret = kstrtoint(kbuf + 2, 10, &pid);
 
-		if (ret != 1) {
+		if (ret < 0) {
 			pr_err("Register operation accepts only `R <pid>`. Got %d values.\n",
 			       ret);
 			break;
@@ -36,9 +38,9 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 	}
 
 	case 'U': {
-		int ret = kstrtoint(kbuf, 10, &pid);
+		int ret = kstrtoint(kbuf + 2, 10, &pid);
 
-		if (ret != 1) {
+		if (ret < 0) {
 			pr_err("De-register operation accepts only `U <pid>`. Got %d values.\n",
 			       ret);
 			break;
