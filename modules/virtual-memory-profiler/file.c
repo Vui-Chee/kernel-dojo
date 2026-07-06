@@ -24,26 +24,26 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 
 	switch (op) {
 	case 'R': {
-		int ret = sscanf(kbuf, "%c,%d", &op, &pid);
+		int ret = kstrtoint(kbuf, 10, &pid);
 
-		if (ret != 2) {
+		if (ret != 1) {
 			pr_err("Register operation accepts only `R <pid>`. Got %d values.\n",
 			       ret);
 			break;
 		}
-		pr_debug("Registering process: %c,%d\n", op, pid);
+		pr_debug("Registering process: %d\n", pid);
 		break;
 	}
 
 	case 'U': {
-		int ret = sscanf(kbuf, "%c,%d", &op, &pid);
+		int ret = kstrtoint(kbuf, 10, &pid);
 
-		if (ret != 2) {
-			pr_err("De-register operation accepts only `U <pid`. Got %d values.\n",
+		if (ret != 1) {
+			pr_err("De-register operation accepts only `U <pid>`. Got %d values.\n",
 			       ret);
 			break;
 		}
-		pr_debug("De-registering process: %c,%d\n", op, pid);
+		pr_debug("De-registering process: %d\n", pid);
 		break;
 	}
 
