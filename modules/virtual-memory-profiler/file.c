@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 #include "file.h"
+#include "process.h"
 
 const struct proc_ops fileops = {
 	.proc_write = on_proc_write,
@@ -22,8 +23,6 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 	pid_t pid;
 	char op = kbuf[0];
 
-	pr_debug("kbuf = %s, count = %zu\n", kbuf, count);
-
 	switch (op) {
 	case 'R': {
 		int ret = kstrtoint(kbuf + 2, 10, &pid);
@@ -33,7 +32,14 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 			       ret);
 			break;
 		}
-		pr_debug("Registering process: %d\n", pid);
+
+		int err = reg_proc(pid);
+
+		if (err != 0)
+			pr_err("Failed to register process %d, got err: %d\n",
+			       pid, err);
+		else
+			pr_debug("Registered process: %d\n", pid);
 		break;
 	}
 
@@ -45,7 +51,14 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 			       ret);
 			break;
 		}
-		pr_debug("De-registering process: %d\n", pid);
+
+		int err = unreg_proc(pid);
+
+		if (err != 0)
+			pr_err("Failed to un-register process %d, got err: %d\n",
+			       pid, err);
+		else
+			pr_debug("Unregistered process: %d\n", pid);
 		break;
 	}
 

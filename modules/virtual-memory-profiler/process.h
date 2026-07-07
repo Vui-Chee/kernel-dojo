@@ -8,13 +8,16 @@
 extern struct list_head pcbs;
 
 struct _pcb {
+	pid_t pid;
 	unsigned long cpu_util;
 	unsigned long min_flt;
-	unsigned long max_flt;
+	unsigned long maj_flt;
 
 	struct list_head list;
 };
 
+int reg_proc(pid_t pid);
+int unreg_proc(pid_t pid);
 void free_pcbs(void);
 
 #endif
