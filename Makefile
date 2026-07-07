@@ -16,8 +16,8 @@ M_DIR ?= modules/*
 M_DIR := $(realpath $(M_DIR))
 
 # Allow commands to operate only these files.
-SRCS  := $(sort $(foreach dir,$(M_DIR),$(wildcard $(dir)/*.c $(dir)/*.h)))
-FILTERED_SRCS := $(filter-out %.mod.c, $(SRCS))
+EXPANDED_SRCS  := $(wildcard $(SRCS))
+FILTERED_SRCS := $(filter-out %.mod.c,$(EXPANDED_SRCS))
 
 export KROOT
 
