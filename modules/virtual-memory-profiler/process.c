@@ -2,4 +2,4 @@
 #include "cpu.h"
 #include "process.h"
 
-LIST_HEAD(processes);
+LIST_HEAD(pcbs);
