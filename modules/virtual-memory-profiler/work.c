@@ -40,22 +40,26 @@ int write_message(char op, int pid)
 int main(int argc, char *argv[])
 {
 	if (argc < 2) {
-		printf("Usage: %s <operation>\n", argv[0]);
+		printf("Usage: %s <operation> <pid>\n", argv[0]);
 		return 1;
 	}
 
 	char op = argv[1][0];
 
-	pid_t pid = getpid();
-
 	switch (op) {
 	case 'r':
 	case 'R':
+		pid_t pid = getpid();
+
 		write_message('R', pid);
 		break;
 	case 'u':
 	case 'U':
-		write_message('U', pid);
+		if (argc < 3) {
+			printf("Supply <pid> to delete.\n");
+			return 1;
+		}
+		write_message('U', atoi(argv[2]));
 		break;
 	default:
 	}
