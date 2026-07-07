@@ -42,6 +42,8 @@ static void __exit vm_profiler_exit(void)
 	pr_debug("Removed file %s\n", PROCFS_FILE);
 	remove_proc_entry(PROC_TIME_DIR, NULL);
 	pr_debug("Removed folder %s\n", PROC_TIME_DIR);
+	free_pcbs();
+	pr_debug("Freed PCBs\n");
 }
 
 module_init(vm_profiler_init);

@@ -15,4 +15,6 @@ struct _pcb {
 	struct list_head list;
 };
 
+void free_pcbs(void);
+
 #endif
