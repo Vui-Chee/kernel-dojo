@@ -6,8 +6,8 @@
 #include <linux/sched.h>
 #include <linux/sched/signal.h>
 
-int get_cpu_use(int pid, unsigned long *min_flt, unsigned long *maj_flt,
-		unsigned long *cpu_utilization)
+static int get_cpu_use(int pid, unsigned long *min_flt, unsigned long *maj_flt,
+		       unsigned long *cpu_utilization)
 {
 	struct task_struct *task;
 	struct pid *pid_struct;
