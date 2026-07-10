@@ -8,11 +8,8 @@ LIST_HEAD(pcbs);
 
 int reg_proc(pid_t pid)
 {
-	unsigned long min_flt = 0;
-	unsigned long maj_flt = 0;
-	unsigned long cpu_utilization = 0;
-
-	int not_found = get_cpu_use(pid, &min_flt, &maj_flt, &cpu_utilization);
+	// No point storing any metrics on first registration since no work is done.
+	int not_found = get_cpu_use(pid, NULL, NULL, NULL);
 
 	if (not_found)
 		return not_found;
@@ -28,9 +25,6 @@ int reg_proc(pid_t pid)
 	// TODO: add lock
 
 	new_pcb->pid = pid;
-	new_pcb->min_flt = min_flt;
-	new_pcb->maj_flt = maj_flt;
-	new_pcb->cpu_util = cpu_utilization;
 	list_add_tail(&new_pcb->list, &pcbs);
 
 #ifdef DEBUG
