@@ -8,11 +8,9 @@
 extern spinlock_t pcbs_lock;
 extern struct list_head pcbs;
 
+ // track process only
 struct _pcb {
 	pid_t pid;
-	unsigned long cpu_util;
-	unsigned long min_flt;
-	unsigned long maj_flt;
 
 	struct list_head list;
 };
