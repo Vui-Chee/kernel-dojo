@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/workqueue.h>
+#include <linux/vmalloc.h>
 
 #include "sampling.h"
 
-// #define BUFFER_SIZE (128 * 4096)
+#define NUM_PAGES    128
+#define BUFFER_SIZE  (NUM_PAGES * PAGE_SIZE)
 
 static struct delayed_work sampling;
-// static struct sample *buffer = NULL; // write telemetry data to this buffer
+static struct sample *ring_buffer; // write samples to this buffer
 
 static unsigned long next_tick; // ok to be unset
 
@@ -27,15 +29,25 @@ static void handler(struct work_struct *work)
 	schedule_delayed_work(&sampling, msecs_to_jiffies(50));
 }
 
-void kickstart_sampling(void)
+int kickstart_sampling(void)
 {
 	pr_debug("First pcb, initializing delayed monitoring.\n");
+
+	void *raw_ptr = vmalloc(BUFFER_SIZE);
+
+	if (!raw_ptr)
+		return -ENOMEM;
+	ring_buffer = (struct sample *) raw_ptr;
+
 	INIT_DELAYED_WORK(&sampling, handler);
 	schedule_delayed_work(&sampling, msecs_to_jiffies(50));
+
+	return 0;
 }
 
 void stop_sampling(const char *ctx)
 {
 	pr_debug("%s. Stopping sampling...\n", ctx);
 	cancel_delayed_work_sync(&sampling);
+	vfree(ring_buffer);
 }

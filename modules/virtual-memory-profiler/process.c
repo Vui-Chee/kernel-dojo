@@ -10,7 +10,7 @@ LIST_HEAD(pcbs);
 
 int reg_proc(pid_t pid)
 {
-	// check if pid is valid process 
+	// check if pid is valid process
 	int not_found = get_cpu_use(pid, NULL, NULL, NULL);
 
 	if (not_found)
