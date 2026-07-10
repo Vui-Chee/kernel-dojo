@@ -7,6 +7,8 @@
 DEFINE_SPINLOCK(pcbs_lock);
 LIST_HEAD(pcbs);
 
+// TODO: impl work queue
+
 int reg_proc(pid_t pid)
 {
 	// No point storing any metrics on first registration since no work is done.
@@ -73,8 +75,10 @@ void free_pcbs(void)
 {
 	struct _pcb *entry, *next;
 
+	spin_lock(&pcbs_lock);
 	list_for_each_entry_safe(entry, next, &pcbs, list) {
 		list_del(&entry->list);
 		kfree(entry);
 	}
+	spin_unlock(&pcbs_lock);
 }
