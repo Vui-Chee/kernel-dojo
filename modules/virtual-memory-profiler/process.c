@@ -8,13 +8,21 @@ DEFINE_SPINLOCK(pcbs_lock);
 LIST_HEAD(pcbs);
 
 static struct delayed_work monitoring;
+static unsigned long next_tick; // ok to be unset
 
 static void monitoring_handler(struct work_struct *work)
 {
 	// TODO: harvest metrics using get_cpu_use()
 	// TODO: vmalloc ring buffer
 	// sample every 1/20th of a second
-	pr_debug("Tick!!!\n");
+
+#ifdef DEBUG
+	if (time_after_eq(jiffies, next_tick)) {
+		pr_debug("Tick!!!\n");
+		next_tick = jiffies + secs_to_jiffies(1);
+	}
+#endif
+
 	schedule_delayed_work(&monitoring, msecs_to_jiffies(50));
 }
 
@@ -41,6 +49,7 @@ int reg_proc(pid_t pid)
 	if (list_empty(&pcbs)) {
 		pr_debug("First pcb, initializing delayed monitoring.\n");
 		INIT_DELAYED_WORK(&monitoring, monitoring_handler);
+		schedule_delayed_work(&monitoring, msecs_to_jiffies(50));
 	}
 	list_add_tail(&new_pcb->list, &pcbs);
 
