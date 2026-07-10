@@ -7,7 +7,16 @@
 DEFINE_SPINLOCK(pcbs_lock);
 LIST_HEAD(pcbs);
 
-// TODO: impl work queue
+static struct delayed_work monitoring;
+
+static void monitoring_handler(struct work_struct *work)
+{
+	// TODO: harvest metrics using get_cpu_use()
+	// TODO: vmalloc ring buffer
+	// sample every 1/20th of a second
+	pr_debug("Tick!!!\n");
+	schedule_delayed_work(&monitoring, msecs_to_jiffies(50));
+}
 
 int reg_proc(pid_t pid)
 {
@@ -28,6 +37,11 @@ int reg_proc(pid_t pid)
 	new_pcb->pid = pid;
 
 	spin_lock(&pcbs_lock);
+	// first pcb, init work queue
+	if (list_empty(&pcbs)) {
+		pr_debug("First pcb, initializing delayed monitoring.\n");
+		INIT_DELAYED_WORK(&monitoring, monitoring_handler);
+	}
 	list_add_tail(&new_pcb->list, &pcbs);
 
 #ifdef DEBUG
@@ -66,6 +80,12 @@ int unreg_proc(pid_t pid)
 	pr_debug("pcbs size (unregister): %zu\n", size);
 #endif
 
+	// last item removed, delete work queue
+	if (list_empty(&pcbs)) {
+		pr_debug("Last pcb removed, stopping monitoring...\n");
+		cancel_delayed_work_sync(&monitoring);
+	}
+
 	spin_unlock(&pcbs_lock);
 	return 0;
 }
@@ -79,6 +99,10 @@ void free_pcbs(void)
 	list_for_each_entry_safe(entry, next, &pcbs, list) {
 		list_del(&entry->list);
 		kfree(entry);
+	}
+	if (list_empty(&pcbs)) {
+		pr_debug("All pcbs freed, stopping monitoring...\n");
+		cancel_delayed_work_sync(&monitoring); // idempotent
 	}
 	spin_unlock(&pcbs_lock);
 }
