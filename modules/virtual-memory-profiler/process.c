@@ -4,6 +4,7 @@
 #include "cpu.h"
 #include "process.h"
 
+DEFINE_SPINLOCK(pcbs_lock);
 LIST_HEAD(pcbs);
 
 int reg_proc(pid_t pid)
@@ -22,9 +23,9 @@ int reg_proc(pid_t pid)
 	if (!new_pcb)
 		return -ENOMEM;
 
-	// TODO: add lock
-
 	new_pcb->pid = pid;
+
+	spin_lock(&pcbs_lock);
 	list_add_tail(&new_pcb->list, &pcbs);
 
 #ifdef DEBUG
@@ -33,6 +34,7 @@ int reg_proc(pid_t pid)
 	pr_debug("pcbs size (register): %zu\n", size);
 #endif
 
+	spin_unlock(&pcbs_lock);
 	return 0;
 }
 
@@ -41,30 +43,28 @@ int unreg_proc(pid_t pid)
 	struct _pcb *t, *tmp;
 	struct _pcb *found = NULL;
 
+	spin_lock(&pcbs_lock);
 	list_for_each_entry_safe(t, tmp, &pcbs, list) {
-#ifdef DEBUG
-		pr_debug("un-register: iterating pid %d\n", t->pid);
-#endif
 		if (t->pid == pid) {
 			found = t;
 			break;
 		}
 	}
 
-	if (found) {
-		list_del(&found->list);
-		kfree(found);
-		goto count_check;
-	} else
+	if (!found) {
+		spin_unlock(&pcbs_lock);
 		return -1;
+	}
 
-count_check: {
+	list_del(&found->list);
+	kfree(found);
 #ifdef DEBUG
 	size_t size = list_count_nodes(&pcbs);
 
 	pr_debug("pcbs size (unregister): %zu\n", size);
 #endif
-}
+
+	spin_unlock(&pcbs_lock);
 	return 0;
 }
 

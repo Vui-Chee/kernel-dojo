@@ -5,6 +5,7 @@
 #include <linux/list.h>
 #include <linux/types.h>
 
+extern spinlock_t pcbs_lock;
 extern struct list_head pcbs;
 
 struct _pcb {
