@@ -10,7 +10,7 @@ LIST_HEAD(pcbs);
 
 int reg_proc(pid_t pid)
 {
-	// No point storing any metrics on first registration since no work is done.
+	// check if pid is valid process 
 	int not_found = get_cpu_use(pid, NULL, NULL, NULL);
 
 	if (not_found)
@@ -25,7 +25,6 @@ int reg_proc(pid_t pid)
 	new_pcb->pid = pid;
 
 	spin_lock(&pcbs_lock);
-	// first pcb, init work queue
 	if (list_empty(&pcbs))
 		kickstart_sampling();
 	list_add_tail(&new_pcb->list, &pcbs);
@@ -66,7 +65,6 @@ int unreg_proc(pid_t pid)
 	pr_debug("pcbs size (unregister): %zu\n", size);
 #endif
 
-	// last item removed, delete work queue
 	if (list_empty(&pcbs))
 		stop_sampling("Last item removed");
 
@@ -74,7 +72,6 @@ int unreg_proc(pid_t pid)
 	return 0;
 }
 
-/* Assumes pcbs are allocated with kmalloc. */
 void free_pcbs(void)
 {
 	struct _pcb *entry, *next;
