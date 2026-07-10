@@ -11,6 +11,7 @@ MAKEFLAGS += KCFLAGS="-Wno-error=missing-prototypes" LLVM=1 C=2 -j$(nproc)
 BUILD ?= ./tools/build.sh
 RUN ?= ./tools/start_qemu.sh
 KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
+DEBUG ?= true
 
 M_DIR ?= modules/*
 M_DIR := $(realpath $(M_DIR))
@@ -81,7 +82,7 @@ mod:
 		[ -d $$dir ] || continue; \
 		echo "Building $$dir..."; \
 		cd $$dir && \
-			KROOT=$(KERNEL_DIR) ../../tools/genmake.sh && \
+			DEBUG=$(DEBUG) KROOT=$(KERNEL_DIR) ../../tools/genmake.sh && \
 			if [ -f Makefile ]; then $(MAKE); fi; \
 		cd $(CURDIR); \
 	done
