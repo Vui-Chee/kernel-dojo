@@ -31,8 +31,9 @@ static int get_cpu_use(int pid, unsigned long *min_flt, unsigned long *maj_flt,
 
 	// combine both user and kernel time gives full cpu time of process.
 	if (cpu_utilization)
-		*cpu_utilization = (unsigned long)(nsecs_to_jiffies(task->utime) +
-					   	   nsecs_to_jiffies(task->stime));
+		*cpu_utilization =
+			(unsigned long)(nsecs_to_jiffies(task->utime) +
+					nsecs_to_jiffies(task->stime));
 
 	return 0;
 }
