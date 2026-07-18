@@ -5,6 +5,8 @@
 KERNEL_VERSION ?= 6.18.6
 KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 KERNEL_DIR ?= $(realpath linux-$(KERNEL_VERSION))
+CC := clang
+CFLAGS := -Wall -O2 -I$(KERNEL_DIR)/tools/testing/selftests
 
 # LLVM follows how kernel is built using build.sh
 MAKEFLAGS += KCFLAGS="-Wno-error=missing-prototypes" LLVM=1 C=2 -j$(nproc)
@@ -101,3 +103,12 @@ fmt:
 .PHONY: lint
 lint:
 	$(KERNEL_DIR)/scripts/checkpatch.pl --file --no-tree $(FILTERED_SRCS)
+
+.PHONY: test
+test:
+	@for f in $(M_DIR)tests/*.c;do \
+		b="$${f%.c}"; \
+		rm -rf "$$b"; \
+		$(CC) $(CFLAGS) "$$b.c" -o "$$b"; \
+		./"$$b"; \
+	done
