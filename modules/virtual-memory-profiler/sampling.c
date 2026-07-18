@@ -61,6 +61,15 @@ void stop_sampling(const char *ctx)
 	pr_debug("%s. Stopping sampling...\n", ctx);
 	cancel_delayed_work_sync(&sampling);
 	if (ring_buffer) {
+		unsigned long offset;
+
+		for (offset = 0; offset < BUFFER_SIZE; offset += PAGE_SIZE) {
+			struct page *page = vmalloc_to_page((void *)((unsigned long)ring_buffer + offset));
+
+			/* set reserved pages */
+			if (page)
+				ClearPageReserved(page);
+		}
 		vfree(ring_buffer);
 		ring_buffer = NULL;
 	}
