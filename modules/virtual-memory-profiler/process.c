@@ -10,13 +10,12 @@ LIST_HEAD(pcbs);
 
 int reg_proc(pid_t pid)
 {
+	struct _pcb *new_pcb;
 	// check if pid is valid process
 	int not_found = get_cpu_use(pid, NULL, NULL, NULL);
 
 	if (not_found)
 		return not_found;
-
-	struct _pcb *new_pcb;
 
 	new_pcb = kmalloc(sizeof(*new_pcb), GFP_KERNEL);
 	if (!new_pcb)

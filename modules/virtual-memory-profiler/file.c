@@ -9,6 +9,12 @@ const struct proc_ops fileops = {
 ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 		      loff_t *ppos)
 {
+	char *kbuf __free(kfree);
+
+	pid_t pid;
+	char op;
+	int ret, err;
+
 	if (*ppos != 0)
 		return -EINVAL;
 
@@ -16,16 +22,15 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 		return -EINVAL;
 
 	/* Copy data from user space to kernel space safely (including null-termination). */
-	char *kbuf __free(kfree) = memdup_user_nul(ubuf, count);
+	kbuf = memdup_user_nul(ubuf, count);
 	if (IS_ERR(kbuf))
 		return PTR_ERR(kbuf);
 
-	pid_t pid;
-	char op = kbuf[0];
+	op = kbuf[0];
 
 	switch (op) {
 	case 'R': {
-		int ret = kstrtoint(kbuf + 2, 10, &pid);
+		ret = kstrtoint(kbuf + 2, 10, &pid);
 
 		if (ret < 0) {
 			pr_err("Register operation accepts only `R <pid>`. Got %d values.\n",
@@ -33,7 +38,7 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 			break;
 		}
 
-		int err = reg_proc(pid);
+		err = reg_proc(pid);
 
 		if (err != 0)
 			pr_err("Failed to register process %d, got err: %d\n",
@@ -44,7 +49,7 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 	}
 
 	case 'U': {
-		int ret = kstrtoint(kbuf + 2, 10, &pid);
+		ret = kstrtoint(kbuf + 2, 10, &pid);
 
 		if (ret < 0) {
 			pr_err("De-register operation accepts only `U <pid>`. Got %d values.\n",
@@ -52,7 +57,7 @@ ssize_t on_proc_write(struct file *file, const char __user *ubuf, size_t count,
 			break;
 		}
 
-		int err = unreg_proc(pid);
+		err = unreg_proc(pid);
 
 		if (err != 0)
 			pr_err("Failed to un-register process %d, got err: %d\n",

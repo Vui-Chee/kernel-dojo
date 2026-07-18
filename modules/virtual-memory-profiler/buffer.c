@@ -9,6 +9,8 @@ struct ring_buffer *init_shared_buffer(unsigned int capacity, size_t el_size)
 	struct ring_buffer *rb;
 	size_t entries_size = array_size(capacity, el_size);
 	size_t buf_size = struct_size(rb, entries, entries_size);
+	int i;
+	struct page *page;
 
 	rb = vmalloc(buf_size);
 
@@ -23,10 +25,8 @@ struct ring_buffer *init_shared_buffer(unsigned int capacity, size_t el_size)
 	rb->tail = 0;
 	spin_lock_init(&rb->lock);
 
-	unsigned long nr_pages = DIV_ROUND_UP(buf_size, PAGE_SIZE);
-
-	for (int i = 0; i < nr_pages; i++) {
-		struct page *page = vmalloc_to_page((char *)rb + i * PAGE_SIZE);
+	for (i = 0; i < DIV_ROUND_UP(buf_size, PAGE_SIZE); i++) {
+		page = vmalloc_to_page((char *)rb + i * PAGE_SIZE);
 
 		/* set reserved pages */
 		if (page)
@@ -38,15 +38,15 @@ struct ring_buffer *init_shared_buffer(unsigned int capacity, size_t el_size)
 
 void free_shared_buffer(struct ring_buffer *rb)
 {
+	size_t entries_size, buf_size;
+
 	if (!rb)
 		panic("Cannot free NULL ring buffer!\n");
 
-	size_t entries_size = array_size(rb->capacity, rb->el_size);
-	size_t buf_size = struct_size(rb, entries, entries_size);
+	entries_size = array_size(rb->capacity, rb->el_size);
+	buf_size = struct_size(rb, entries, entries_size);
 
-	unsigned long nr_pages = DIV_ROUND_UP(buf_size, PAGE_SIZE);
-
-	for (int i = 0; i < nr_pages; i++) {
+	for (int i = 0; i < DIV_ROUND_UP(buf_size, PAGE_SIZE); i++) {
 		struct page *page = vmalloc_to_page((char *)rb + i * PAGE_SIZE);
 
 		if (page)
