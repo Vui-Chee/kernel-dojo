@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/workqueue.h>
 #include <linux/vmalloc.h>
+#include <linux/mm.h>
 
 #include "sampling.h"
 
@@ -38,6 +39,16 @@ int kickstart_sampling(void)
 	if (!raw_ptr)
 		return -ENOMEM;
 	ring_buffer = (struct sample *) raw_ptr;
+
+	unsigned long offset;
+
+	for (offset = 0; offset < BUFFER_SIZE; offset += PAGE_SIZE) {
+		struct page *page = vmalloc_to_page((void *)((unsigned long)raw_ptr + offset));
+
+		/* set reserved pages */
+		if (page)
+			SetPageReserved(page);
+	}
 
 	INIT_DELAYED_WORK(&sampling, handler);
 	schedule_delayed_work(&sampling, msecs_to_jiffies(50));
