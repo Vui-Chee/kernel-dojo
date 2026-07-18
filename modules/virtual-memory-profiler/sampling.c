@@ -38,6 +38,7 @@ int kickstart_sampling(void)
 
 	if (!raw_ptr)
 		return -ENOMEM;
+	memset(raw_ptr, -1, BUFFER_SIZE);
 	ring_buffer = (struct sample *) raw_ptr;
 
 	unsigned long offset;
