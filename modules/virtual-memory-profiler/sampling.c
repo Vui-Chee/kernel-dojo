@@ -5,8 +5,8 @@
 
 #include "sampling.h"
 
-#define NUM_PAGES    128
-#define BUFFER_SIZE  (NUM_PAGES * PAGE_SIZE)
+#define NUM_PAGES 128
+#define BUFFER_SIZE (NUM_PAGES * PAGE_SIZE)
 
 static struct delayed_work sampling;
 static struct sample *ring_buffer; // write samples to this buffer
@@ -39,12 +39,13 @@ int kickstart_sampling(void)
 	if (!raw_ptr)
 		return -ENOMEM;
 	memset(raw_ptr, -1, BUFFER_SIZE);
-	ring_buffer = (struct sample *) raw_ptr;
+	ring_buffer = (struct sample *)raw_ptr;
 
 	unsigned long offset;
 
 	for (offset = 0; offset < BUFFER_SIZE; offset += PAGE_SIZE) {
-		struct page *page = vmalloc_to_page((void *)((unsigned long)raw_ptr + offset));
+		struct page *page = vmalloc_to_page(
+			(void *)((unsigned long)raw_ptr + offset));
 
 		/* set reserved pages */
 		if (page)
@@ -65,7 +66,8 @@ void stop_sampling(const char *ctx)
 		unsigned long offset;
 
 		for (offset = 0; offset < BUFFER_SIZE; offset += PAGE_SIZE) {
-			struct page *page = vmalloc_to_page((void *)((unsigned long)ring_buffer + offset));
+			struct page *page = vmalloc_to_page(
+				(void *)((unsigned long)ring_buffer + offset));
 
 			/* set reserved pages */
 			if (page)
