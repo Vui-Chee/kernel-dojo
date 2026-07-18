@@ -108,7 +108,8 @@ lint:
 test:
 	@for f in $(M_DIR)tests/*.c;do \
 		b="$${f%.c}"; \
-		rm -rf "$$b"; \
+		rm -rf "$$b" "$$b.d"; \
 		$(CC) $(CFLAGS) "$$b.c" -o "$$b"; \
 		./"$$b"; \
+		rm -rf "$$b" "$$b.d"; \
 	done
