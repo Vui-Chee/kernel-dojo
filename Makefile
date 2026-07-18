@@ -6,10 +6,11 @@ KERNEL_VERSION ?= 6.18.6
 KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 KERNEL_DIR ?= $(realpath linux-$(KERNEL_VERSION))
 CC := clang
-CFLAGS := -Wall -O2 -I$(KERNEL_DIR)/tools/testing/selftests
+CFLAGS_TEST := -Wall -O2 -I$(KERNEL_DIR)/tools/testing/selftests
 
 # LLVM follows how kernel is built using build.sh
-MAKEFLAGS += KCFLAGS="-Wno-error=missing-prototypes" LLVM=1 C=2 -j$(nproc)
+KCFLAGS="-Wno-error=missing-prototypes -Wall -Wextra"
+MAKEFLAGS += $(KCFLAGS) LLVM=1 C=2 -j$(nproc)
 BUILD ?= ./tools/build.sh
 RUN ?= ./tools/start_qemu.sh
 KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
@@ -109,7 +110,7 @@ test:
 	@for f in $(M_DIR)tests/*.c;do \
 		b="$${f%.c}"; \
 		rm -rf "$$b" "$$b.d"; \
-		$(CC) $(CFLAGS) "$$b.c" -o "$$b"; \
+		$(CC) $(CFLAGS_TEST) "$$b.c" -o "$$b"; \
 		./"$$b"; \
 		rm -rf "$$b" "$$b.d"; \
 	done
