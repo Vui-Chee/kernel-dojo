@@ -60,5 +60,8 @@ void stop_sampling(const char *ctx)
 {
 	pr_debug("%s. Stopping sampling...\n", ctx);
 	cancel_delayed_work_sync(&sampling);
-	vfree(ring_buffer);
+	if (ring_buffer) {
+		vfree(ring_buffer);
+		ring_buffer = NULL;
+	}
 }
