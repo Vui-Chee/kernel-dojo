@@ -91,12 +91,19 @@ if [[ -n $K_S ]] ; then
     if [[ $KOBJ_COUNT -gt 1 ]] ; then
         MOD_NAME=$(basename "$(pwd)" | tr '-' '_')
         echo -e "\nobj-m +=  ${MOD_NAME}.o" >> Makefile
+
+	for f in tests/*_test.c; do
+    	    [ -e "$f" ] || continue
+    	    echo "obj-m += ${f%.c}.o"
+	done >> Makefile
+
         echo -e "\n${MOD_NAME}-y :=$OBJS\n" >> Makefile
     else
         echo -e "\nobj-m += $OBJS" >> Makefile
     fi
     if [[ "$DEBUG" = true ]] ; then
     	echo -e "ccflags-y += -DDEBUG" >> Makefile
+    	echo -e "ccflags-y += -I\$(src)" >> Makefile
     fi
     echo -e "\nexport KROOT=$KROOT" >> Makefile
     if [[ -n $ARCH ]] ; then

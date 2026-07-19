@@ -41,9 +41,6 @@ else
 	$(error "No supported package manager found (apt, dnf, pacman, zypper). Please install dependencies manually.")
 endif
 
-echo:
-	@echo $(KERNEL_DIR)
-
 .PHONY: install
 install:
 	@echo "Detected package manager. Installing dependencies..."
@@ -70,7 +67,7 @@ run:
 .PHONY: clean
 clean:
 	@echo "Cleaning the kernel build..."
-	cd $(KERNEL_DIR) && $(MAKE) clean
+	cd $(KERNEL_DIR) && $(MAKE) mrproper
 
 .PHONY: scope
 scope:
@@ -105,8 +102,9 @@ fmt:
 lint:
 	$(KERNEL_DIR)/scripts/checkpatch.pl --file --no-tree $(FILTERED_SRCS)
 
-.PHONY: test
-test:
+# userspace testing
+.PHONY: utest
+utest:
 	@for f in $(M_DIR)tests/*.c;do \
 		b="$${f%.c}"; \
 		rm -rf "$$b" "$$b.d"; \

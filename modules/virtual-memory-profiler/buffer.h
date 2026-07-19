@@ -4,6 +4,7 @@
 
 struct ring_buffer *init_shared_buffer(unsigned int capacity, size_t el_size);
 void free_shared_buffer(struct ring_buffer *rb);
+void insert_buffer(struct ring_buffer *rb, void *entry);
 
 struct ring_buffer {
 	size_t el_size;
