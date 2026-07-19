@@ -6,7 +6,7 @@
 #include "buffer.h"
 #include "sampling.h"
 
-#define SAMPLE_SIZE 16000
+#define SAMPLE_SIZE 12000
 
 static struct delayed_work sampling;
 static struct ring_buffer *rb;
@@ -16,7 +16,6 @@ static unsigned long next_tick; // ok to be unset
 static void handler(struct work_struct *work)
 {
 	// TODO: harvest metrics using get_cpu_use()
-	// TODO: vmalloc ring buffer
 	// sample every 1/20th of a second
 
 #ifdef DEBUG
@@ -43,7 +42,11 @@ int kickstart_sampling(void)
 void stop_sampling(const char *ctx)
 {
 	pr_debug("%s. Stopping sampling...\n", ctx);
-	cancel_delayed_work_sync(&sampling);
+	/* If no delay work is acted on, do not cancel. */
+	if (sampling.work.func) {
+		pr_debug("Cancelling last sampling work.\n");
+		cancel_delayed_work_sync(&sampling);
+	}
 	if (rb)
 		free_shared_buffer(rb);
 }
