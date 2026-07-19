@@ -8,7 +8,7 @@
 extern spinlock_t pcbs_lock;
 extern struct list_head pcbs;
 
- // track process only
+// track process only
 struct _pcb {
 	pid_t pid;
 
