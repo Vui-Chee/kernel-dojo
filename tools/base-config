@@ -1,0 +1,89 @@
+# Core build/debugging
+set_config CONFIG_DEBUG_INFO
+set_config CONFIG_DEBUG_INFO_DWARF4
+set_config CONFIG_DEBUG_INFO_BTF
+set_config CONFIG_FRAME_POINTER
+set_config CONFIG_STACK_VALIDATION
+set_config CONFIG_GDB_SCRIPTS
+
+# Modules
+set_config CONFIG_MODULES
+set_config CONFIG_MODULE_ALLOW_BTF_MISMATCH
+set_config CONFIG_MODULE_SIG_FORMAT
+set_config CONFIG_MODULE_SIG n
+set_config CONFIG_MODULE_COMPRESS_NONE
+
+# QEMU CPU/platform
+set_config CONFIG_NR_CPUS 8
+set_config CONFIG_SMP
+
+# Serial console
+set_config CONFIG_SERIAL_8250
+set_config CONFIG_SERIAL_8250_CONSOLE
+
+# Virtio devices used by QEMU
+set_config CONFIG_VIRTIO
+set_config CONFIG_VIRTIO_PCI
+set_config CONFIG_VIRTIO_BLK
+set_config CONFIG_VIRTIO_NET
+set_config CONFIG_VIRTIO_CONSOLE
+
+# Filesystem
+set_config CONFIG_EXT4_FS
+set_config CONFIG_TMPFS
+set_config CONFIG_DEVTMPFS
+set_config CONFIG_DEVTMPFS_MOUNT
+
+# Networking basics
+set_config CONFIG_INET
+set_config CONFIG_IPV6
+set_config CONFIG_PACKET
+set_config CONFIG_UNIX
+set_config CONFIG_NET
+set_config CONFIG_NETDEVICES
+
+# Tun/tap (useful for QEMU networking)
+set_config CONFIG_TUN
+
+# BPF development
+set_config CONFIG_BPF
+set_config CONFIG_BPF_SYSCALL
+set_config CONFIG_BPF_JIT
+set_config CONFIG_BPF_JIT_ALWAYS_ON
+
+# eBPF debugging
+set_config CONFIG_DEBUG_INFO_BTF
+set_config CONFIG_KALLSYMS
+set_config CONFIG_KALLSYMS_ALL
+
+# Kernel debugging
+set_config CONFIG_DEBUG_KERNEL
+set_config CONFIG_DEBUG_MISC
+set_config CONFIG_DYNAMIC_DEBUG
+
+# Memory debugging
+set_config CONFIG_SLUB_DEBUG
+set_config CONFIG_PAGE_OWNER
+
+# Tracing
+set_config CONFIG_FTRACE
+set_config CONFIG_FUNCTION_TRACER
+set_config CONFIG_FUNCTION_GRAPH_TRACER
+
+# User namespaces / containers
+set_config CONFIG_USER_NS
+set_config CONFIG_NAMESPACES
+set_config CONFIG_PID_NS
+set_config CONFIG_NET_NS
+set_config CONFIG_UTS_NS
+set_config CONFIG_IPC_NS
+set_config CONFIG_CGROUPS
+set_config CONFIG_MEMCG
+
+# Overlay filesystem (containers)
+set_config CONFIG_OVERLAY_FS
+
+# KVM guest support (if using nested QEMU/KVM)
+set_config CONFIG_KVM
+set_config CONFIG_KVM_INTEL
+set_config CONFIG_KVM_AMD
