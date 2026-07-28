@@ -2,6 +2,10 @@
 #include <kunit/test.h>
 #include "buffer.h"
 
+struct test_sample {
+	int x;
+};
+
 static void ring_buffer_init_test(struct kunit *test)
 {
 	struct ring_buffer *rb;
@@ -17,8 +21,23 @@ static void ring_buffer_init_test(struct kunit *test)
 	free_shared_buffer(rb);
 }
 
+static void ring_buffer_insert_test(struct kunit *test)
+{
+	struct ring_buffer *rb;
+	struct test_sample entry = { 123 };
+
+	rb = init_shared_buffer(2, sizeof(entry));
+
+	insert_buffer(rb, (void *) &entry);
+
+	KUNIT_EXPECT_EQ(test, rb->head + 1, rb->tail);
+
+	free_shared_buffer(rb);
+}
+
 static struct kunit_case ring_buffer_test_cases[] = {
 	KUNIT_CASE(ring_buffer_init_test),
+	KUNIT_CASE(ring_buffer_insert_test),
 	{}
 };
 

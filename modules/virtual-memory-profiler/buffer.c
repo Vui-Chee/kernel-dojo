@@ -52,7 +52,10 @@ void insert_buffer(struct ring_buffer *rb, void *entry)
 	dst = rb->entries + rb->head * rb->el_size;
 	memcpy(dst, entry, rb->el_size);
 	rb->tail = (rb->head + 1) % rb->capacity;
+
+	spin_unlock(&rb->lock);
 }
+EXPORT_SYMBOL_GPL(insert_buffer);
 
 void free_shared_buffer(struct ring_buffer *rb)
 {
