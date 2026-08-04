@@ -129,6 +129,20 @@ static void sched_best_task(void)
 		kref_put(&curr->refcount, task_free_fn);
 }
 
+// TODO: fix issue where bringing periodic process to foreground hangs qemu??
+
+// TODO: improve dispatch_fn
+//
+// while (!kthread_should_stop()) {
+//     wait_event_interruptible(dispatch_wq, need_reschedule || kthread_should_stop());
+//
+//     if (kthread_should_stop())
+//         break;
+//
+//     need_reschedule = false;
+//     sched_best_task();
+// }
+
 static int dispatch_fn(void *data)
 {
 	pr_debug("Dispatch thread started\n");
