@@ -39,19 +39,15 @@ struct ring_buffer *init_shared_buffer(unsigned int capacity, size_t el_size)
 }
 EXPORT_SYMBOL_GPL(init_shared_buffer);
 
-/* For simplicity, overwrite tail when full. */
 void insert_buffer(struct ring_buffer *rb, void *entry)
 {
 	void *dst;
 
 	spin_lock(&rb->lock);
 
-	if (rb->head == rb->tail)
-		rb->tail = (rb->tail + 1) % rb->capacity;
-
 	dst = rb->entries + rb->head * rb->el_size;
 	memcpy(dst, entry, rb->el_size);
-	rb->tail = (rb->head + 1) % rb->capacity;
+	rb->tail = (rb->tail + 1) % rb->capacity;
 
 	spin_unlock(&rb->lock);
 }

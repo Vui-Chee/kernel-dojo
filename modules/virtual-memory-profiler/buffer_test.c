@@ -2,6 +2,12 @@
 #include <kunit/test.h>
 #include "buffer.h"
 
+// TODO: Rewire test as part of main module
+// so no need to export the methods in buffer.c
+// At the same time, we want to build a *.ko
+// file so that we can load the test module
+// without having to load the custom module first.
+
 struct test_sample {
 	int x;
 };
@@ -28,8 +34,12 @@ static void ring_buffer_insert_test(struct kunit *test)
 
 	rb = init_shared_buffer(2, sizeof(entry));
 
+	KUNIT_EXPECT_EQ(test, rb->head, rb->tail);
 	insert_buffer(rb, (void *) &entry);
-
+	KUNIT_EXPECT_EQ(test, rb->head + 1, rb->tail);
+	insert_buffer(rb, (void *) &entry);
+	KUNIT_EXPECT_EQ(test, rb->head + 0, rb->tail);
+	insert_buffer(rb, (void *) &entry);
 	KUNIT_EXPECT_EQ(test, rb->head + 1, rb->tail);
 
 	free_shared_buffer(rb);
