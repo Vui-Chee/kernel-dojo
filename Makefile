@@ -48,12 +48,7 @@ install:
 
 .PHONY: clone
 clone:
-	@if [ -d $(KERNEL_DIR) ]; then \
-		echo "$(KERNEL_DIR) already exists."; \
-	else \
-		echo "cloning..."; \
-		git clone --depth 1 --branch v$(KERNEL_VERSION) $(KERNEL_REMOTE) $(KERNEL_DIR); \
-	fi
+	git clone --depth 1 --branch v$(KERNEL_VERSION) $(KERNEL_REMOTE) $(KERNEL_DIR)
 
 .PHONY: build
 build:
