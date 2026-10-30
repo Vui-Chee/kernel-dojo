@@ -11,11 +11,24 @@ source $MYDIR/host_lib.sh
 CONFIG=${CONFIG:-dbx}
 ASAN=${ASAN:-0}
 GTESTS=${GTESTS:-1}
-ARCH=${ARCH:-x86_64}
 RELEASE=${RELEASE:-$(kernel_release)}
 LLVM=${LLVM:-1}
 SILENT="-s"
 EXTRA_CONFIG=""
+
+case "$(arch)" in
+    aarch64|arm64)
+        DETECTED_ARCH="arm64"
+        ;;
+    x86_64|amd64)
+        DETECTED_ARCH="x86_64"
+        ;;
+    *)
+        DETECTED_ARCH="$(arch)"
+        ;;
+esac
+# Use existing $ARCH if set, otherwise use the detected one
+ARCH=${ARCH:-$DETECTED_ARCH}
 
 while getopts "d:c:S" flag
 do
@@ -68,7 +81,7 @@ case "$CONFIG" in
 esac
 
 if [[ ! -e $KDIR/.config ]]; then
-	make $SILENT -j$(nproc) CC="$CC" LLVM=$LLVM ARCH=$ARCH ${ARCH}_defconfig
+	make $SILENT -j$(nproc) CC="$CC" LLVM=$LLVM ARCH=$ARCH defconfig
 
 	set +x
 
