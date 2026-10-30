@@ -4,7 +4,7 @@
 #       https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net.git linux-netdev
 KERNEL_VERSION ?= 6.18.6
 KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-KERNEL_DIR ?= $(realpath linux-$(KERNEL_VERSION))
+KERNEL_DIR ?= $$(realpath linux-$(KERNEL_VERSION))
 CC := clang
 CFLAGS_TEST := -Wall -O2 -I$(KERNEL_DIR)/tools/testing/selftests
 
