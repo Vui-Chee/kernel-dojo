@@ -70,3 +70,11 @@ The args will be passed to `tools/build.sh`
 ```sh
 make build LLVM="-<version>" CC="clang-<version>"
 ```
+
+## Run custom module
+
+This runs the custom module inside your newly built kernel image.
+
+```sh
+make run M_DIR=modules/<module name> CC=clang-<version> LLVM=-<version>
+```
