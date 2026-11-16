@@ -13,6 +13,7 @@ ASAN=${ASAN:-0}
 GTESTS=${GTESTS:-1}
 RELEASE=${RELEASE:-$(kernel_release)}
 LLVM=${LLVM:-1}
+CC=${CC:-clang}
 SILENT="-s"
 EXTRA_CONFIG=""
 
@@ -42,7 +43,6 @@ shift $((OPTIND -1))
 echo "Kernel dir: $KDIR";
 cd $KDIR
 
-CC="clang"
 if [ -e /usr/bin/ccache ]; then
 	CC="ccache clang"
 fi
@@ -81,7 +81,7 @@ case "$CONFIG" in
 esac
 
 if [[ ! -e $KDIR/.config ]]; then
-	make $SILENT -j$(nproc) CC="$CC" LLVM=$LLVM ARCH=$ARCH defconfig
+	make $SILENT -j$(nproc) CC="$CC" LLVM="$LLVM" ARCH="$ARCH" defconfig
 
 	set +x
 
@@ -235,6 +235,6 @@ make $SILENT -j$(nproc) CC="$CC" LLVM=$LLVM ARCH=$ARCH olddefconfig
 KCFLAGS="-Wno-error=format -Wno-error=array-bounds" \
 make $SILENT -j$(nproc) CC="$CC" LLVM=$LLVM ARCH=$ARCH $TARGETS
 
-make $SILENT -j$(nproc) CC="$CC" LLVM=1 headers
+make $SILENT -j$(nproc) CC="$CC" LLVM=$LLVM headers
 
 clangd_generate

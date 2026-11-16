@@ -10,7 +10,7 @@ CFLAGS_TEST := -Wall -O2 -I$(KERNEL_DIR)/tools/testing/selftests
 
 # LLVM follows how kernel is built using build.sh
 KCFLAGS="-Wno-error=missing-prototypes -Wall -Wextra"
-MAKEFLAGS += $(KCFLAGS) LLVM=1 C=2 -j$(nproc)
+MAKEFLAGS += $(KCFLAGS) C=2 -j$(nproc)
 BUILD ?= ./tools/build.sh
 RUN ?= ./tools/start_qemu.sh
 KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
