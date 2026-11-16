@@ -4,7 +4,7 @@
 #       https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net.git linux-netdev
 KERNEL_VERSION ?= 6.18.6
 KERNEL_REMOTE ?= git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-KERNEL_DIR ?= $$(realpath linux-$(KERNEL_VERSION))
+KERNEL_DIR ?= $(realpath linux-$(KERNEL_VERSION))
 CC := clang
 CFLAGS_TEST := -Wall -O2 -I$(KERNEL_DIR)/tools/testing/selftests
 
@@ -13,11 +13,27 @@ KCFLAGS="-Wno-error=missing-prototypes -Wall -Wextra"
 MAKEFLAGS += $(KCFLAGS) C=2 -j$(nproc)
 BUILD ?= ./tools/build.sh
 RUN ?= ./tools/start_qemu.sh
-KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
+
+# Normalize the host/target architecture names used by uname and Kbuild.
+KERNEL_ARCH ?= $(if $(ARCH),$(ARCH),$(shell uname -m))
+ifeq ($(KERNEL_ARCH),aarch64)
+  KERNEL_ARCH := arm64
+  KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/arm64/boot/Image.gz
+else ifeq ($(KERNEL_ARCH),arm64)
+  KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/arm64/boot/Image.gz
+else ifeq ($(KERNEL_ARCH),amd64)
+  KERNEL_ARCH := x86_64
+  KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
+else ifeq ($(KERNEL_ARCH),x86_64)
+  KERNEL_IMAGE ?= $(KERNEL_DIR)/arch/x86/boot/bzImage
+else
+  $(error Unsupported architecture '$(KERNEL_ARCH)' for KERNEL_IMAGE)
+endif
+
 DEBUG ?= true
 
 M_DIR ?= modules/*
-M_DIR := $(realpath $(M_DIR))
+M_DIR := $(realpath $$(M_DIR))
 
 # Allow commands to operate only these files.
 EXPANDED_SRCS  := $(wildcard $(SRCS))
@@ -57,7 +73,7 @@ build:
 
 run:
 	@echo "Running the kernel in QEMU..."
-	START_DIR=$(realpath $(M_DIR)) $(RUN) -m $(KERNEL_IMAGE)
+	ARCH=$(KERNEL_ARCH) START_DIR=$(realpath $(M_DIR)) $(RUN) -m $(KERNEL_IMAGE)
 
 .PHONY: clean
 clean:
